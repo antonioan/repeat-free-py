@@ -1,0 +1,56 @@
+# Internally one-based, externally zero-based
+class FenwickTree(object):
+    def __init__(self, n=0, arr=None):
+        if arr is not None:
+            n = len(arr)
+        if n == 0:
+            raise Exception("Data structure size must be positive.")
+        self.n = n + 1
+        self.bit = [0] * self.n
+        if arr is not None:
+            for i in range(n):
+                self.add_range(i, i, arr[i])
+
+    # from start=1 to end=idx
+    def sum(self, idx):
+        ret = 0
+        idx += 1
+        while idx > 0:
+            ret += self.bit[idx]
+            idx -= idx & -idx
+        return ret
+
+    def sum_range(self, left, right):
+        return self.sum(right) - self.sum(left - 1)
+
+    def add(self, idx, delta):
+        idx += 1
+        while idx < self.n:
+            self.bit[idx] += delta
+            idx += idx & -idx
+
+    def add_range(self, left, right, delta):
+        self.add(left, delta)
+        self.add(right + 1, -delta)
+
+    def __getitem__(self, idx):
+        ret = 0
+        idx += 1
+        while idx > 0:
+            ret += self.bit[idx]
+            idx -= idx & -idx
+        return ret
+
+    def __len__(self):
+        return self.n - 1
+
+    def __iter__(self):
+        # generator expression
+        return (self[idx] for idx in range(self.n - 1))
+
+    def __eq__(self, other):
+        return [i for i in self] == other
+
+    @property
+    def values(self):
+        return [i for i in self]
