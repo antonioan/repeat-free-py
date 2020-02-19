@@ -1,4 +1,10 @@
-# Internally one-based, externally zero-based
+
+# Fenwick Tree:
+# Internally one-based indexing, externally zero-based indexing
+# Source in C++: https://cp-algorithms.com/data_structures/fenwick.html
+# Independently moved to Python
+
+
 class FenwickTree(object):
     def __init__(self, n=0, arr=None):
         if arr is not None:
