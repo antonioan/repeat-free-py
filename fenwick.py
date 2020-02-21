@@ -11,8 +11,8 @@ class FenwickTree(object):
             n = len(arr)
         if n == 0:
             raise Exception("Data structure size must be positive.")
-        self.n = n + 1
-        self.bit = [0] * self.n
+        self._n = n + 1
+        self._bit = [0] * self._n
         if arr is not None:
             for i in range(n):
                 self.add_range(i, i, arr[i])
@@ -22,7 +22,7 @@ class FenwickTree(object):
         ret = 0
         idx += 1
         while idx > 0:
-            ret += self.bit[idx]
+            ret += self._bit[idx]
             idx -= idx & -idx
         return ret
 
@@ -31,8 +31,8 @@ class FenwickTree(object):
 
     def add(self, idx, delta):
         idx += 1
-        while idx < self.n:
-            self.bit[idx] += delta
+        while idx < self._n:
+            self._bit[idx] += delta
             idx += idx & -idx
 
     def add_range(self, left, right, delta):
@@ -43,16 +43,16 @@ class FenwickTree(object):
         ret = 0
         idx += 1
         while idx > 0:
-            ret += self.bit[idx]
+            ret += self._bit[idx]
             idx -= idx & -idx
         return ret
 
     def __len__(self):
-        return self.n - 1
+        return self._n - 1
 
     def __iter__(self):
         # generator expression
-        return (self[idx] for idx in range(self.n - 1))
+        return (self[idx] for idx in range(self._n - 1))
 
     def __eq__(self, other):
         return [i for i in self] == other

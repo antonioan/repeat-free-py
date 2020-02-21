@@ -31,3 +31,4 @@ if __name__ == '__main__':
     seq = [0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0]
     fenwick = FenwickTree(arr=seq)
     print(fenwick.values)
+    print(seq[-4:])
