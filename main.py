@@ -12,11 +12,11 @@ def test_print(i, b):
 def test_fenwick():
     tests_passed = 0
     arr = [1, 2, 3, 4, 5]
-    fenwick = FenwickTree(arr=arr)
-    tests_passed += test_print(1, fenwick == [1, 2, 3, 4, 5])
-    fenwick.add_range(1, 3, -2)
-    tests_passed += test_print(2, fenwick == [1, 0, 1, 2, 5])
-    tests_passed += test_print(3, fenwick[1] == 0)
+    tree = FenwickTree(arr=arr)
+    tests_passed += test_print(1, tree == [1, 2, 3, 4, 5])
+    tree.add_range(1, 3, -2)
+    tests_passed += test_print(2, tree == [1, 0, 1, 2, 5])
+    tests_passed += test_print(3, tree[1] == 0)
     if tests_passed == 3:
         print("Congrats! All tests for fenwick passed.")
     else:
