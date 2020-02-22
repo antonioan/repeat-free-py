@@ -1,4 +1,5 @@
 # Source: https://gist.github.com/Jekton/d161ccf57bdcc9da5ee134c191f81af7
+from typing import Optional, Tuple
 
 
 class AvlRankTree(object):
@@ -32,7 +33,7 @@ class AvlRankTree(object):
         # Initially empty range index.
         self.root = None
 
-    def add(self, key):
+    def insert(self, key):
         # Inserts a key in the range index.
         if key is None:
             raise ValueError('Index must not be None')
@@ -143,23 +144,43 @@ class AvlRankTree(object):
             root = root.right
         return root.key
 
-    def list(self, first_key, last_key):
+    def list(self, first_key, last_key, inorder=True):
         # List of values for the keys that fall within [first_key, last_key].
         lca = self._lca(first_key, last_key)
         result = []
-        AvlRankTree._node_list(lca, first_key, last_key, result)
-        return result
+        _deltas = []
+        _right_deltas = []
+        if inorder:
+            AvlRankTree._node_list_inorder(lca, first_key, last_key, result, _deltas, _right_deltas)
+        else:
+            AvlRankTree._node_list_preorder(lca, first_key, last_key, result, _deltas, _right_deltas)
+        return result, _deltas, _right_deltas
 
     @staticmethod
-    def _node_list(node, lo, hi, result):
+    def _node_list_preorder(node, lo, hi, result, _deltas, _right_deltas):
         if node is None:
             return
         if lo <= node.key <= hi:
             result.append(node.key)
+            _deltas.append(node.deltas)
+            _right_deltas.append(node.right_deltas)
         if node.key >= lo:
-            AvlRankTree._node_list(node.left, lo, hi, result)
+            AvlRankTree._node_list_preorder(node.left, lo, hi, result, _deltas, _right_deltas)
         if node.key <= hi:
-            AvlRankTree._node_list(node.right, lo, hi, result)
+            AvlRankTree._node_list_preorder(node.right, lo, hi, result, _deltas, _right_deltas)
+
+    @staticmethod
+    def _node_list_inorder(node, lo, hi, result, _deltas, _right_deltas):
+        if node is None:
+            return
+        if node.key >= lo:
+            AvlRankTree._node_list_inorder(node.left, lo, hi, result, _deltas, _right_deltas)
+        if lo <= node.key <= hi:
+            result.append(node.key)
+            _deltas.append(node.deltas)
+            _right_deltas.append(node.right_deltas)
+        if node.key <= hi:
+            AvlRankTree._node_list_inorder(node.right, lo, hi, result, _deltas, _right_deltas)
 
     def _lca(self, lo, hi):
         node = self.root
@@ -196,6 +217,7 @@ class AvlRankTree(object):
 
     def _find_path(self, key, before, when_left, when_right, after):
         params = before()
+        assert params is not None
         root = self.root
         while root is not None and not (root.key == key):
             if key < root.key:
@@ -211,41 +233,43 @@ class AvlRankTree(object):
     #   key:    int if exists else None
     #   rank:   int
     #   deltas: int
-    def _rank(self, key):
+    def _rank(self, key) -> Tuple[bool, Optional[int], int, int]:
         return self._find_path(
             key=key,
             before=lambda: {'rank': 0, 'deltas': 0},
             when_left=lambda params, root: params,
-            when_right=lambda params, root: [params.rank + AvlRankTree.Node.safe_size(root.left) + 1,
-                                             params.deltas + AvlRankTree.Node.safe_right_deltas(root) + root.deltas],
+            when_right=lambda params, root: {'rank': params['rank'] + AvlRankTree.Node.safe_size(root.left) + 1,
+                                             'deltas': params['deltas'] + AvlRankTree.Node.safe_right_deltas(root)},
             after=lambda params, root: [True,
                                         root.key,
-                                        params.rank + AvlRankTree.Node.safe_size(root.left) + 1,
-                                        params.deltas + AvlRankTree.Node.safe_right_deltas(root) + root.deltas]
+                                        params['rank'] + AvlRankTree.Node.safe_size(root.left) + 1,
+                                        params['deltas'] + root.deltas]
             if root else [False,
                           None,
-                          params.rank,
-                          params.deltas]
+                          params['rank'],
+                          params['deltas']]
         )
 
     @staticmethod
-    def _add_range_when_left(params, root):
-        if not params.right_edge:
-            root.deltas += params.delta
-        root.right_deltas += params.delta
+    def _delta_add_when_left(params, root):
+        if not params['right_edge']:
+            root.deltas += params['delta']
+        root.right_deltas += params['delta']
+        return params
 
-    def add_range(self, i, j, delta):
+    def delta_add(self, i, j, delta):
         self._find_path(
             key=i,
             before=lambda: {'delta': delta, 'right_edge': False},
-            when_left=AvlRankTree._add_range_when_left,
+            when_left=AvlRankTree._delta_add_when_left,
             when_right=lambda params, root: params,
-            after=lambda params, root: AvlRankTree._add_range_when_left
+            after=AvlRankTree._delta_add_when_left
         )
         self._find_path(
-            key=i,
-            before=lambda: {'delta': -delta, 'right_edge': True},
-            when_left=AvlRankTree._add_range_when_left,
+            key=j,
+            before=lambda: {'delta': -delta, 'right_edge': False},
+            when_left=AvlRankTree._delta_add_when_left,
             when_right=lambda params, root: params,
-            after=lambda params, root: AvlRankTree._add_range_when_left
+            after=lambda params, root: AvlRankTree._delta_add_when_left({'delta': params['delta'],
+                                                                         'right_edge': True}, root)
         )

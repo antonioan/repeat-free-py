@@ -1,12 +1,11 @@
 from math import log, ceil
 from typing import Iterable, Optional
 from avl_rank import AvlRankTree  # OR: from avl import AvlTree
-from queue import Queue
+from autoinc_queue import AutoIncQueue
 from fenwick import FenwickTree
 
 # TODO:
-#  1. Test AvlRankTree with the deltas
-#  2. Think how this new structure can help solve the indexing problem
+#  1. Think how this new structure of AVL can help solve the indexing problem
 
 
 class Window(list):
@@ -29,7 +28,7 @@ class Algorithm1(object):
         self.k = 2 * self.log_n + 2
         self.w = []
         self.windows: Optional[AvlRankTree] = None
-        self.queue: Optional[Queue] = None
+        self.queue: Optional[AutoIncQueue] = None
         self.real_ids: Optional[FenwickTree] = None
 
     def encode(self):
@@ -38,7 +37,7 @@ class Algorithm1(object):
 
         # Initialize data structures (see README for details)
         self.windows = AvlRankTree()
-        self.queue = Queue(range(w_len), increment_until=w_len)
+        self.queue = AutoIncQueue(range(w_len), increment_until=w_len)
         self.real_ids = FenwickTree(arr=range(w_len))
 
         # Run algorithm
@@ -55,7 +54,7 @@ class Algorithm1(object):
                 exists, existent_key = self.windows.find(win_j)
                 if not exists:
                     # New window who dis
-                    self.windows.add(win_j)
+                    self.windows.insert(win_j)
                 else:
                     # Una problema, signore
                     win_i: Window = existent_key
