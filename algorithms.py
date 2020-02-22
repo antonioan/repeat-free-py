@@ -4,6 +4,10 @@ from avl_rank import AvlRankTree  # OR: from avl import AvlTree
 from queue import Queue
 from fenwick import FenwickTree
 
+# TODO:
+#  1. Test AvlRankTree with the deltas
+#  2. Think how this new structure can help solve the indexing problem
+
 
 class Window(list):
     # Note: Comparison is via list.__lt__(), which compares lexicographically.
@@ -90,6 +94,6 @@ class Algorithm1(object):
         self.real_ids.add_range(0, i - 1, self.k - 1)
 
         # Step 2:
-        #
+        # Indexing problem, look above for the TODO
 
         pass
