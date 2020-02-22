@@ -1,8 +1,22 @@
+from typing import Optional
 
 # Fenwick Tree:
 # Internally one-based indexing, externally zero-based indexing
 # Source in C++: https://cp-algorithms.com/data_structures/fenwick.html
 # Independently moved to Python
+
+
+class LinkedList(object):
+    class Node(object):
+        def __init__(self, key):
+            self.key: Optional[int] = key
+            self.left: Optional[LinkedList.Node] = None
+            self.right: Optional[LinkedList.Node] = None
+
+    def __init__(self):
+        self.head = LinkedList.Node(None)
+
+    # def
 
 
 class FenwickTree(object):

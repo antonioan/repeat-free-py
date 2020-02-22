@@ -2,13 +2,31 @@
 
 
 class AvlRankTree(object):
-    class Node:
+    class Node(object):
         def __init__(self, key):
             self.key = key
-            self.height = 0
-            self.size = 1
             self.left = None
             self.right = None
+
+            # Avl-specific
+            self.height = 0
+
+            # Extra data
+            self.size = 1  # Rank
+            self.deltas = 0
+            self.right_deltas = 0
+
+        @staticmethod
+        def safe_size(node):
+            return node.size if node is not None else 0
+
+        @staticmethod
+        def safe_height(node):
+            return node.height if node is not None else 0
+
+        @staticmethod
+        def safe_right_deltas(node):
+            return node.right_deltas if node is not None else 0
 
     def __init__(self):
         # Initially empty range index.
@@ -18,97 +36,106 @@ class AvlRankTree(object):
         # Inserts a key in the range index.
         if key is None:
             raise ValueError('Index must not be None')
-        self.root = self._insert(self.root, key)
+        self.root = AvlRankTree._insert(self.root, key)
 
-    def _insert(self, root, key):
+    @staticmethod
+    def _insert(root, key):
         if root is None:
             return AvlRankTree.Node(key)
         if root.key < key:
-            root.right = self._insert(root.right, key)
+            root.right = AvlRankTree._insert(root.right, key)
         else:
-            root.left = self._insert(root.left, key)
-        return self._balance(root)
-
-    def _update_height(self, root):
-        root.height = max(self._height(root.left), self._height(root.right)) + 1
-
-    def _update_size(self, root):
-        root.size = self._size(root.left) + self._size(root.right) + 1
+            root.left = AvlRankTree._insert(root.left, key)
+        return AvlRankTree._balance(root)
 
     @staticmethod
-    def _height(node):
-        if node is None:
-            return -1
-        return node.height
+    def _update_height(root):
+        root.height = max(AvlRankTree.Node.safe_height(root.left), AvlRankTree.Node.safe_height(root.right)) + 1
 
     @staticmethod
-    def _size(node):
-        if node is None:
-            return 0
-        return node.size
+    def _update_size(root):
+        root.size = AvlRankTree.Node.safe_size(root.left) + AvlRankTree.Node.safe_size(root.right) + 1
 
-    def _balance(self, root):
-        left_height = self._height(root.left)
-        right_height = self._height(root.right)
+    @staticmethod
+    def _update_deltas_rr(root: Node, right: Node):
+        orig_deltas = root.deltas
+        root.deltas += right.deltas + right.right_deltas
+        right.right_deltas -= orig_deltas
+        right.deltas -= orig_deltas
+
+    @staticmethod
+    def _update_deltas_lr(root: Node, left: Node):
+        root.right_deltas += left.right_deltas
+        root.deltas += left.right_deltas
+
+    @staticmethod
+    def _balance(root):
+        left_height = AvlRankTree.Node.safe_height(root.left)
+        right_height = AvlRankTree.Node.safe_height(root.right)
         if left_height >= right_height + 2:
-            if self._height(root.left.left) > self._height(root.left.right):
-                root = self._right_rotate(root)
+            if AvlRankTree.Node.safe_height(root.left.left) > AvlRankTree.Node.safe_height(root.left.right):
+                root = AvlRankTree._right_rotate(root)
             else:
-                root.left = self._left_rotate(root.left)
-                root = self._right_rotate(root)
+                root.left = AvlRankTree._left_rotate(root.left)
+                root = AvlRankTree._right_rotate(root)
         elif right_height >= left_height + 2:
-            if self._height(root.right.right) > self._height(root.right.left):
-                root = self._left_rotate(root)
+            if AvlRankTree.Node.safe_height(root.right.right) > AvlRankTree.Node.safe_height(root.right.left):
+                root = AvlRankTree._left_rotate(root)
             else:
-                root.right = self._right_rotate(root.right)
-                root = self._left_rotate(root)
+                root.right = AvlRankTree._right_rotate(root.right)
+                root = AvlRankTree._left_rotate(root)
         else:
-            self._update_height(root)
-            self._update_size(root)
+            AvlRankTree._update_height(root)
+            AvlRankTree._update_size(root)
         return root
 
-    def _left_rotate(self, root):
+    @staticmethod
+    def _left_rotate(root):
         right = root.right
         root.right = right.left
         right.left = root
-        self._update_height(root)
-        self._update_height(right)
-        self._update_size(root)
-        self._update_size(right)
+        AvlRankTree._update_height(root)
+        AvlRankTree._update_height(right)
+        AvlRankTree._update_size(root)
+        AvlRankTree._update_size(right)
+        AvlRankTree._update_deltas_lr(right, root)
         return right
 
-    def _right_rotate(self, root):
+    @staticmethod
+    def _right_rotate(root):
         left = root.left
         root.left = left.right
         left.right = root
-        self._update_height(root)
-        self._update_height(left)
-        self._update_size(root)
-        self._update_size(left)
+        AvlRankTree._update_height(root)
+        AvlRankTree._update_height(left)
+        AvlRankTree._update_size(root)
+        AvlRankTree._update_size(left)
+        AvlRankTree._update_deltas_rr(left, root)
         return left
 
     def remove(self, key):
         # Removes a key from the range index.
-        self.root = self._remove(self.root, key)
+        self.root = AvlRankTree._remove(self.root, key)
 
-    def _remove(self, root, key):
+    @staticmethod
+    def _remove(root, key):
         if root is None:
             return None
 
         if root.key < key:
-            root.right = self._remove(root.right, key)
+            root.right = AvlRankTree._remove(root.right, key)
         elif root.key > key:
-            root.left = self._remove(root.left, key)
+            root.left = AvlRankTree._remove(root.left, key)
         else:
             if root.left is None:
                 return root.right
             elif root.right is None:
                 return root.left
             else:
-                right_most_of_left = self._right_most(root.left)
-                root.left = self._remove(root.left, right_most_of_left)
+                right_most_of_left = AvlRankTree._right_most(root.left)
+                root.left = AvlRankTree._remove(root.left, right_most_of_left)
                 root.key = right_most_of_left
-        return self._balance(root)
+        return AvlRankTree._balance(root)
 
     @staticmethod
     def _right_most(root):
@@ -120,18 +147,19 @@ class AvlRankTree(object):
         # List of values for the keys that fall within [first_key, last_key].
         lca = self._lca(first_key, last_key)
         result = []
-        self._node_list(lca, first_key, last_key, result)
+        AvlRankTree._node_list(lca, first_key, last_key, result)
         return result
 
-    def _node_list(self, node, lo, hi, result):
+    @staticmethod
+    def _node_list(node, lo, hi, result):
         if node is None:
             return
         if lo <= node.key <= hi:
             result.append(node.key)
         if node.key >= lo:
-            self._node_list(node.left, lo, hi, result)
+            AvlRankTree._node_list(node.left, lo, hi, result)
         if node.key <= hi:
-            self._node_list(node.right, lo, hi, result)
+            AvlRankTree._node_list(node.right, lo, hi, result)
 
     def _lca(self, lo, hi):
         node = self.root
@@ -141,24 +169,83 @@ class AvlRankTree(object):
 
     def count(self, first_key, last_key):
         # Number of keys that fall within [first_key, last_key].
-        first_exists, first_rank, _ = self._rank(first_key)
-        _, last_rank, _ = self._rank(last_key)
+        first_exists, _, first_rank, _ = self._rank(first_key)
+        _, _, last_rank, _ = self._rank(last_key)
         return last_rank - first_rank + int(first_exists)
 
-    def _rank(self, key):
-        rank = 0
+    # Same as _rank below, written more explicitly
+    # def _rank_original(self, key):
+    #     rank = 0
+    #     deltas = 0
+    #     root = self.root
+    #     while root is not None and not (root.key == key):
+    #         if key < root.key:
+    #             root = root.left
+    #         else:
+    #             rank += AvlRankTree.Node.safe_size(root.left) + 1
+    #             deltas += AvlRankTree.Node.safe_right_deltas(root)
+    #             root = root.right
+    #     if root is not None:
+    #         rank += AvlRankTree.Node.safe_size(root.left) + 1
+    #         deltas += AvlRankTree.Node.safe_right_deltas(root) + root.deltas
+    #         return True, root.key, rank, deltas
+    #     return False, None, rank, deltas
+
+    def find(self, key):
+        return self._rank(key)
+
+    def _find_path(self, key, before, when_left, when_right, after):
+        params = before()
         root = self.root
         while root is not None and not (root.key == key):
             if key < root.key:
+                params = when_left(params, root)
                 root = root.left
             else:
-                rank += self._size(root.left) + 1
+                params = when_right(params, root)
                 root = root.right
-        if root is not None:
-            rank += self._size(root.left) + 1
-            return True, rank, root.key
-        return False, rank, None
+        return after(params, root)
 
-    def find(self, key):
-        exists, _, existent_key = self._rank(key)
-        return exists, existent_key
+    # Returns a 4-tuple:
+    #   exists: bool
+    #   key:    int if exists else None
+    #   rank:   int
+    #   deltas: int
+    def _rank(self, key):
+        return self._find_path(
+            key=key,
+            before=lambda: {'rank': 0, 'deltas': 0},
+            when_left=lambda params, root: params,
+            when_right=lambda params, root: [params.rank + AvlRankTree.Node.safe_size(root.left) + 1,
+                                             params.deltas + AvlRankTree.Node.safe_right_deltas(root) + root.deltas],
+            after=lambda params, root: [True,
+                                        root.key,
+                                        params.rank + AvlRankTree.Node.safe_size(root.left) + 1,
+                                        params.deltas + AvlRankTree.Node.safe_right_deltas(root) + root.deltas]
+            if root else [False,
+                          None,
+                          params.rank,
+                          params.deltas]
+        )
+
+    @staticmethod
+    def _add_range_when_left(params, root):
+        if not params.right_edge:
+            root.deltas += params.delta
+        root.right_deltas += params.delta
+
+    def add_range(self, i, j, delta):
+        self._find_path(
+            key=i,
+            before=lambda: {'delta': delta, 'right_edge': False},
+            when_left=AvlRankTree._add_range_when_left,
+            when_right=lambda params, root: params,
+            after=lambda params, root: AvlRankTree._add_range_when_left
+        )
+        self._find_path(
+            key=i,
+            before=lambda: {'delta': -delta, 'right_edge': True},
+            when_left=AvlRankTree._add_range_when_left,
+            when_right=lambda params, root: params,
+            after=lambda params, root: AvlRankTree._add_range_when_left
+        )
