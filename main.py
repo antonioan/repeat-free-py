@@ -31,7 +31,6 @@ def test_avl_rank():
     test_name = 'avl_rank'
     tests_passed = 0
     inputs = [5, 3, 6, 1, 4]
-    last = 0
     tree = AvlRankTree()
     for i in inputs:
         tree.insert(i)
@@ -41,22 +40,22 @@ def test_avl_rank():
     # print(tree.list(1, 6))
     # input()
     for times in range(3):
-        existent, existent_key, rank, deltas = tree.find(5)
+        existent, existent_key, _, rank, deltas = tree.find(5)
         tests_passed += test_print(times + 2 + 1100, deltas == 0, test_name)
         tests_passed += test_print(times + 2 + 1200, rank == 4 + times, test_name)
         tests_passed += test_print(times + 2 + 1300, existent_key == 5, test_name)
         tests_passed += test_print(times + 2 + 1400, existent is True, test_name)
-        existent, existent_key, rank, deltas = tree.find(3)
+        existent, existent_key, _, rank, deltas = tree.find(3)
         tests_passed += test_print(times + 2 + 2100, deltas == 5, test_name)
         tests_passed += test_print(times + 2 + 2200, rank == 2 + times, test_name)
         tests_passed += test_print(times + 2 + 2300, existent_key == 3, test_name)
         tests_passed += test_print(times + 2 + 2400, existent is True, test_name)
-        existent, existent_key, rank, deltas = tree.find(4)
+        existent, existent_key, _, rank, deltas = tree.find(4)
         tests_passed += test_print(times + 2 + 3100, deltas == 5, test_name)
         tests_passed += test_print(times + 2 + 3200, rank == 3 + times, test_name)
         tests_passed += test_print(times + 2 + 3300, existent_key == 4, test_name)
         tests_passed += test_print(times + 2 + 3400, existent is True, test_name)
-        existent, existent_key, rank, deltas = tree.find(0)
+        existent, existent_key, _, rank, deltas = tree.find(0)
         tests_passed += test_print(times + 2 + 4100, deltas == 0, test_name)
         tests_passed += test_print(times + 2 + 4200, rank == (times > 0), test_name)
         tests_passed += test_print(times + 2 + 4300, (existent_key is None) == (times == 0), test_name)

@@ -1,10 +1,41 @@
-# Source: https://gist.github.com/Jekton/d161ccf57bdcc9da5ee134c191f81af7
+# AVL Rank Tree:
+# Skeleton source: https://gist.github.com/Jekton/d161ccf57bdcc9da5ee134c191f81af7
+# Further added methods and all the delta-functionality, independently
+
 from typing import Optional, Tuple
+
+
+# Wrapper class for AvlRankTree
+# for consecutive double-edged integers with values
+class IndexMap(object):
+    def __init__(self, first: int):
+        self._avl = AvlRankTree()
+        self._min = first
+        self._max = first
+
+    def prepend(self, value_list: list):
+        for v in reversed(value_list):
+            self._min -= 1
+            self._avl.insert(self._min, v)
+
+    def append(self, value_list: list):
+        for v in value_list:
+            self._max += 1
+            self._avl.insert(self._max, v)
+
+    def __getitem__(self, item):
+        return self._avl[item]
+
+    def delta_add(self, i, j, delta):
+        return self._avl.delta_add(i, j, delta)
+
+    def remove_range(self, i, j):
+        pass
 
 
 class AvlRankTree(object):
     class Node(object):
-        def __init__(self, key):
+        def __init__(self, key, value):
             self.key = key
             self.left = None
             self.right = None
@@ -13,6 +44,7 @@ class AvlRankTree(object):
             self.height = 0
 
             # Extra data
+            self.value = value
             self.size = 1  # Rank
             self.deltas = 0
             self.right_deltas = 0
@@ -33,20 +65,20 @@ class AvlRankTree(object):
         # Initially empty range index.
         self.root = None
 
-    def insert(self, key):
+    def insert(self, key, value=None):
         # Inserts a key in the range index.
         if key is None:
             raise ValueError('Index must not be None')
-        self.root = AvlRankTree._insert(self.root, key)
+        self.root = AvlRankTree._insert(self.root, key, value)
 
     @staticmethod
-    def _insert(root, key):
+    def _insert(root, key, value):
         if root is None:
-            return AvlRankTree.Node(key)
+            return AvlRankTree.Node(key, value)
         if root.key < key:
-            root.right = AvlRankTree._insert(root.right, key)
+            root.right = AvlRankTree._insert(root.right, key, value)
         else:
-            root.left = AvlRankTree._insert(root.left, key)
+            root.left = AvlRankTree._insert(root.left, key, value)
         return AvlRankTree._balance(root)
 
     @staticmethod
@@ -190,11 +222,11 @@ class AvlRankTree(object):
 
     def count(self, first_key, last_key):
         # Number of keys that fall within [first_key, last_key].
-        first_exists, _, first_rank, _ = self._rank(first_key)
-        _, _, last_rank, _ = self._rank(last_key)
+        first_exists, _, _, first_rank, _ = self._rank(first_key)
+        _, _, _, last_rank, _ = self._rank(last_key)
         return last_rank - first_rank + int(first_exists)
 
-    # Same as _rank below, written more explicitly
+    # # Same as _rank below, written more explicitly
     # def _rank_original(self, key):
     #     rank = 0
     #     deltas = 0
@@ -233,7 +265,7 @@ class AvlRankTree(object):
     #   key:    int if exists else None
     #   rank:   int
     #   deltas: int
-    def _rank(self, key) -> Tuple[bool, Optional[int], int, int]:
+    def _rank(self, key) -> Tuple[bool, int, Optional[int], int, int]:
         return self._find_path(
             key=key,
             before=lambda: {'rank': 0, 'deltas': 0},
@@ -242,9 +274,11 @@ class AvlRankTree(object):
                                              'deltas': params['deltas'] + AvlRankTree.Node.safe_right_deltas(root)},
             after=lambda params, root: [True,
                                         root.key,
+                                        root.value,
                                         params['rank'] + AvlRankTree.Node.safe_size(root.left) + 1,
                                         params['deltas'] + root.deltas]
             if root else [False,
+                          key,
                           None,
                           params['rank'],
                           params['deltas']]
@@ -273,3 +307,7 @@ class AvlRankTree(object):
             after=lambda params, root: AvlRankTree._delta_add_when_left({'delta': params['delta'],
                                                                          'right_edge': True}, root)
         )
+
+    def __getitem__(self, key):
+        existent, existent_key, value, _, deltas = self.find(key)
+        return value + deltas if value is not None else None

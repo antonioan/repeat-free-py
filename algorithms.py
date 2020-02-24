@@ -1,8 +1,8 @@
 from math import log, ceil
 from typing import Iterable, Optional
-from avl_rank import AvlRankTree  # OR: from avl import AvlTree
+from avl_rank import AvlRankTree, IndexMap
 from autoinc_queue import AutoIncQueue
-from fenwick import FenwickTree
+# from fenwick import FenwickTree
 
 # TODO:
 #  1. Think how this new structure of AVL can help solve the indexing problem
@@ -29,7 +29,7 @@ class Algorithm1(object):
         self.w = []
         self.windows: Optional[AvlRankTree] = None
         self.queue: Optional[AutoIncQueue] = None
-        self.real_ids: Optional[FenwickTree] = None
+        self.index_map: Optional[IndexMap] = None
 
     def encode(self):
         self.w = self.input + [1] + ([0] * (self.log_n + 1))
@@ -38,7 +38,7 @@ class Algorithm1(object):
         # Initialize data structures (see README for details)
         self.windows = AvlRankTree()
         self.queue = AutoIncQueue(range(w_len), increment_until=w_len)
-        self.real_ids = FenwickTree(arr=range(w_len))
+        self.index_map = AvlRankTree()
 
         # Run algorithm
         self.eliminate()
@@ -49,9 +49,9 @@ class Algorithm1(object):
             if len(self.queue) > 0:
                 # There are more windows to check
                 j_internal = self.queue.pop()
-                j = self.real_ids[j_internal]
+                j = self.index_map[j_internal]
                 win_j = Window(self.w[j:j + self.k], j_internal)
-                exists, existent_key = self.windows.find(win_j)
+                exists, existent_key, _, _, _ = self.windows.find(win_j)
                 if not exists:
                     # New window who dis
                     self.windows.insert(win_j)
@@ -80,7 +80,7 @@ class Algorithm1(object):
     def handle_primal_identical(self, i, j):
         # Step 0:
         # From the internal indexing perspective, i and j might satisfy i > j
-        # This is the case when a newly-added window at the beginning of self.w exists in the already-processed input
+        # This might be the case when a newly-added window at the beginning of self.w exists in the already-seen input
         # So let us ensure i < j
         assert i != j
         if i > j:
@@ -90,9 +90,8 @@ class Algorithm1(object):
 
         # Step 1:
         # Move (internal) indices [0, i - 1] to [k - 1, i + k - 2]
-        self.real_ids.add_range(0, i - 1, self.k - 1)
+        self.index_map.append([])
 
         # Step 2:
-        # Indexing problem, look above for the TODO
 
         pass
