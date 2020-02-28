@@ -14,3 +14,7 @@ To hold a mapping between the logical positions and the physical (actual) positi
 
 ### AVL Rank Tree with Deltas
 To hold a mapping between the logical positions and the physical (actual) positions.
+
+### Chained Hashtable
+
+### Linked List

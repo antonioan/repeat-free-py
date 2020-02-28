@@ -2,7 +2,7 @@
 # Skeleton source: https://gist.github.com/Jekton/d161ccf57bdcc9da5ee134c191f81af7
 # Further added methods and all the delta-functionality, independently
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, NamedTuple
 
 
 # Wrapper class for AvlRankTree
@@ -31,6 +31,14 @@ class IndexMap(object):
 
     def remove_range(self, i, j):
         pass
+
+
+class FindResult(NamedTuple):
+    exists: bool
+    key:    int
+    value:  Optional
+    rank:   int
+    deltas: int
 
 
 class AvlRankTree(object):
@@ -260,9 +268,10 @@ class AvlRankTree(object):
                 root = root.right
         return after(params, root)
 
-    # Returns a 4-tuple:
+    # Returns a 5-tuple (FindResult):
     #   exists: bool
-    #   key:    int if exists else None
+    #   key:    int
+    #   value:  int if exists else None
     #   rank:   int
     #   deltas: int
     def _rank(self, key) -> Tuple[bool, int, Optional[int], int, int]:
@@ -272,16 +281,16 @@ class AvlRankTree(object):
             when_left=lambda params, root: params,
             when_right=lambda params, root: {'rank': params['rank'] + AvlRankTree.Node.safe_size(root.left) + 1,
                                              'deltas': params['deltas'] + AvlRankTree.Node.safe_right_deltas(root)},
-            after=lambda params, root: [True,
-                                        root.key,
-                                        root.value,
-                                        params['rank'] + AvlRankTree.Node.safe_size(root.left) + 1,
-                                        params['deltas'] + root.deltas]
-            if root else [False,
-                          key,
-                          None,
-                          params['rank'],
-                          params['deltas']]
+            after=lambda params, root: FindResult(exists=True,
+                                                  key=root.key,
+                                                  value=root.value,
+                                                  rank=params['rank'] + AvlRankTree.Node.safe_size(root.left) + 1,
+                                                  deltas=params['deltas'] + root.deltas)
+            if root else FindResult(exists=False,
+                                    key=key,
+                                    value=None,
+                                    rank=params['rank'],
+                                    deltas=params['deltas'])
         )
 
     @staticmethod
