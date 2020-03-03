@@ -65,7 +65,10 @@ class Algorithm1:
         return window(tuple(self.w[j_ex:j_ex + self.k - 1]))
 
     def encode(self):
-        self.w = self.input + [bit(1)] + ([bit(0)] * (self.log_n + 1))
+        w_list = self.input + [bit(1)] + ([bit(0)] * (self.log_n + 1))
+        # TODO: Make self.w a LinkedList so that removal of a window is O(k)
+        self.w = LinkedList(iterator=w_list)
+
         self.len = len(self.w)
 
         # Initialize data structures (see README for details)
@@ -81,34 +84,41 @@ class Algorithm1:
 
     def eliminate(self):
         while True:
+            # TODO: Maintain a current node on input and use queue.prev to know
+            #       whether to jump to next or to jump to head.
+            #       This is so that the removal of a window is O(k)
+            input_iter = None
+
             if not self.queue.empty():
                 # There are more windows to check
                 j_ex = self.queue.pop()
                 win_j: Optional[window] = self.window_at(j_ex)
                 if win_j is None:
-                    # Windows done, check (log_n + 1)-RLL
+                    # TODO: Windows done, check (log_n + 1)-RLL
                     raise NotImplementedError()
 
                 index_ex_link: Optional[Link] = self.windows.get(win_j)
                 if index_ex_link is None:
                     # New window who dis
                     j_in = self.index_in[j_ex]
-                    link = Link(j_in, j_ex)
-                    self.index_ex.push(link, prev=self.index_ex.tail)
-                    self.windows.put(window, link)
-                    # TODO: Continue at linked_list.py::LinkedList.__init__(), then here, then below.
-                    # TODO: Continue according to the algorithm described in the sketch paper labeled with: ( * This * )
+                    link_index_ex = Link(j_in, j_ex)
+                    self.index_ex.push(link_index_ex, prev=self.index_ex.tail)
+                    link_window = self.windows.put(win_j, link_index_ex)
+                    self.windows_id.insert(j_in, link_window)
+                    # TODO: Continue according to the algorithm described in my sketch paper labeled: ( * This * )
                 else:
                     i_in, i_ex = index_ex_link.key, index_ex_link.value
                     # j_in = self.index_in[j_ex]
                     self.index_in.delta_add(i_ex + self.k - 1, self.len, 1)
                     self.index_in.delta_add(0, i_ex + self.k - 2, -(self.k - 1))
                     min_in = self.index_ex.head.key
-                    for i, key in enumerate(range(min_in - self.k + 1, min_in)):
-                        link = Link(i, key)
-                        self.index_ex.push(link, prev=None)
-                        # self.windows_id.
-                        # TODO: Above.
+                    self.queue.extend(range(self.k - 2, -1, -1))
+
+                    # for i, key in enumerate(range(min_in - self.k + 1, min_in)):
+                    #     link_index_ex = Link(i, key)
+                    #     self.index_ex.push(link_index_ex, prev=None)
+                    #     self.windows_id
+                    #     self.windows
             else:  # Queue is empty: either RLL, case 2 or done
                 pass
 

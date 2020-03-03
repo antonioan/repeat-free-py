@@ -115,10 +115,12 @@ class ChainedHashtable:
         while cur_node is not None:
             if cur_node.key == key:
                 cur_node.value = value
-                return
+                return cur_node
             else:
                 cur_node = cur_node.next
-        llist.push(Link(key=key, value=value))
+        link = Link(key=key, value=value)
+        llist.push(link)
+        return link
 
     def __setitem__(self, key, value):
         self.put(key, value)
