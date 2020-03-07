@@ -2,35 +2,36 @@
 # Skeleton source: https://gist.github.com/Jekton/d161ccf57bdcc9da5ee134c191f81af7
 # Further added methods and all the delta-functionality, independently
 
-from typing import Optional, Tuple, NamedTuple
+from typing import Optional, Tuple, NamedTuple, List
 
 
-# Wrapper class for AvlRankTree
-# for consecutive double-edged integers with values
-class IndexMap(object):
-    def __init__(self, first: int):
-        self._avl = AvlRankTree()
-        self._min = first
-        self._max = first
-
-    def prepend(self, value_list: list):
-        for v in reversed(value_list):
-            self._min -= 1
-            self._avl.insert(self._min, v)
-
-    def append(self, value_list: list):
-        for v in value_list:
-            self._max += 1
-            self._avl.insert(self._max, v)
-
-    def __getitem__(self, item):
-        return self._avl[item]
-
-    def delta_add(self, i, j, delta):
-        return self._avl.delta_add(i, j, delta)
-
-    def remove_range(self, i, j):
-        pass
+# # Wrapper class for AvlRankTree
+# # for consecutive double-edged integers with values
+# class IndexMap(object):
+#     def __init__(self, first: int):
+#         self._avl = AvlRankTree()
+#         self._min = first
+#         self._max = first
+#
+#     def prepend(self, value_list: list):
+#         for v in reversed(value_list):
+#             self._min -= 1
+#             self._avl.insert(self._min, v)
+#
+#     def append(self, value_list: list):
+#         for v in value_list:
+#             self._max += 1
+#             self._avl.insert(self._max, v)
+#
+#     def __getitem__(self, item):
+#         return self._avl[item]
+#
+#     def delta_add(self, i, j, delta):
+#         return self._avl.delta_add(i, j, delta)
+#
+#     def remove_range(self, i, j):
+#         # TODO
+#         raise NotImplementedError()
 
 
 class FindResult(NamedTuple):
@@ -45,17 +46,19 @@ class AvlRankTree(object):
     class Node(object):
         def __init__(self, key, value):
             self.key = key
-            self.left = None
-            self.right = None
+            self.left: Optional[AvlRankTree.Node] = None
+            self.right: Optional[AvlRankTree.Node] = None
 
             # Avl-specific
             self.height = 0
 
             # Extra data
-            self.value = value
-            self.size = 1  # Rank
-            self.deltas = 0
-            self.right_deltas = 0
+            self.value:                Optional = value
+            self.size:                      int = 1  # Used for rank
+            self.deltas:                    int = 0
+            self.right_deltas:              int = 0
+            self.left_most:    AvlRankTree.Node = self
+            self.right_most:   AvlRankTree.Node = self
 
         @staticmethod
         def safe_size(node):
@@ -73,11 +76,21 @@ class AvlRankTree(object):
         # Initially empty range index.
         self.root = None
 
-    def insert(self, key, value=None):
+    def __len__(self):
+        return self.root.size if self.root else 0
+
+    def insert(self, key, value):
         # Inserts a key in the range index.
         if key is None:
             raise ValueError('Index must not be None')
-        self.root = AvlRankTree._insert(self.root, key, value)
+
+        # Insertion to beginning or end of tree is O(1)
+        if value <= self.root.left_most.key:
+            self.root.left_most = AvlRankTree._insert(self.root.left_most, key, value)
+        elif value >= self.root.right_most.key:
+            self.root.right_most = AvlRankTree._insert(self.root.right_most, key, value)
+        else:
+            self.root = AvlRankTree._insert(self.root, key, value)
 
     @staticmethod
     def _insert(root, key, value):
@@ -110,6 +123,14 @@ class AvlRankTree(object):
         root.deltas += left.right_deltas
 
     @staticmethod
+    def _update_left_most(root):
+        root.left_most = root.left.left_most if root.left else root
+
+    @staticmethod
+    def _update_right_most(root):
+        root.right_most = root.right.right_most if root.right else root
+
+    @staticmethod
     def _balance(root):
         left_height = AvlRankTree.Node.safe_height(root.left)
         right_height = AvlRankTree.Node.safe_height(root.right)
@@ -126,19 +147,24 @@ class AvlRankTree(object):
                 root.right = AvlRankTree._right_rotate(root.right)
                 root = AvlRankTree._left_rotate(root)
         else:
-            AvlRankTree._update_height(root)
-            AvlRankTree._update_size(root)
+            AvlRankTree._local_update(root)
         return root
+
+    @staticmethod
+    def _local_update(node):
+        for update in [AvlRankTree._update_height,
+                       AvlRankTree._update_size,
+                       AvlRankTree._update_left_most,
+                       AvlRankTree._update_right_most]:
+            update(node)
 
     @staticmethod
     def _left_rotate(root):
         right = root.right
         root.right = right.left
         right.left = root
-        AvlRankTree._update_height(root)
-        AvlRankTree._update_height(right)
-        AvlRankTree._update_size(root)
-        AvlRankTree._update_size(right)
+        AvlRankTree._local_update(root)
+        AvlRankTree._local_update(right)
         AvlRankTree._update_deltas_lr(right, root)
         return right
 
@@ -147,10 +173,8 @@ class AvlRankTree(object):
         left = root.left
         root.left = left.right
         left.right = root
-        AvlRankTree._update_height(root)
-        AvlRankTree._update_height(left)
-        AvlRankTree._update_size(root)
-        AvlRankTree._update_size(left)
+        AvlRankTree._local_update(root)
+        AvlRankTree._local_update(left)
         AvlRankTree._update_deltas_rr(left, root)
         return left
 
@@ -173,16 +197,30 @@ class AvlRankTree(object):
             elif root.right is None:
                 return root.left
             else:
-                right_most_of_left = AvlRankTree._right_most(root.left)
+                right_most_of_left = root.left.right_most
                 root.left = AvlRankTree._remove(root.left, right_most_of_left)
                 root.key = right_most_of_left
         return AvlRankTree._balance(root)
 
+    def update(self, key, new_value):
+        AvlRankTree._update(self.root, key, new_value)
+
     @staticmethod
-    def _right_most(root):
-        while root.right is not None:
-            root = root.right
-        return root.key
+    def _update(root, key, new_value):
+        if root is None:
+            return
+        if root.key < key:
+            AvlRankTree._update(root.right, key, new_value)
+        elif root.key > key:
+            AvlRankTree._update(root.left, key, new_value)
+        else:
+            root.value = new_value
+
+    # @staticmethod
+    # def _right_most(root):
+    #     while root.right is not None:
+    #         root = root.right
+    #     return root.key
 
     def list(self, first_key, last_key, inorder=True):
         # List of values for the keys that fall within [first_key, last_key].
@@ -320,3 +358,22 @@ class AvlRankTree(object):
     def __getitem__(self, key):
         existent, existent_key, value, _, deltas = self.find(key)
         return value + deltas if value is not None else None
+
+    @classmethod
+    def from_sorted(cls, sorted_list: List):
+        tree = cls()
+        tree.root = AvlRankTree._from_sorted(sorted_list)
+        tree.left_most, tree.right_most = tree.root, tree.root
+        return tree
+
+    @staticmethod
+    def _from_sorted(sorted_list: List) -> Optional['AvlRankTree.Node']:
+        if len(sorted_list) == 0:
+            return None
+
+        mid: int = (len(sorted_list)) // 2
+        root = AvlRankTree.Node(sorted_list[mid], sorted_list[mid])
+        root.left = AvlRankTree._from_sorted(sorted_list[:mid])
+        root.right = AvlRankTree._from_sorted(sorted_list[mid + 1:])
+        AvlRankTree._local_update(root)
+        return root

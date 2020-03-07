@@ -19,16 +19,32 @@ bit = NewType('bit', int)
 window = NewType('window', Tuple[bit, ...])
 
 
-def cr(n, w):
+# will probably be used with n := log_n
+def cr(n, w) -> List[bit]:
     out = w
     while len(out) < n:
         out += w
+    return out[:n]
+
+
+def b(n, width: int = 0) -> List[bit]:
+    return list(format(n, 'b').zfill(width))
+
+
+def q_ary(n, q, width) -> List[bit]:
+    if n == 0:
+        return [bit(0)] * width
+    nums = []
+    while n:
+        n, r = divmod(n, q)
+        nums.append(r)
+    return list(reversed(''.join(nums).zfill(width)))
 
 
 class Algorithm1:
     # FIELD     TYPE                    SKETCH NAME     DOMAIN          RANGE           DESCRIPTION
     input:      List[bit]               # s             [n]             bit             .
-    w:          List[bit]               # w             [len]           bit             .
+    w:          Optional[LinkedList]    # w             [len]           bit             .
     n:          int                     # n             -               -               .
     len:        int                     # n_tag         -               Max Ext. Index  .
     q:          int                     # q             -               -               .
@@ -38,7 +54,7 @@ class Algorithm1:
     index_ex:   Optional[LinkedList]    # L             Int. Index      Ext. Index      .
     windows:    Optional[Hashtable]     # W             window          Link@index_ex   .
     windows_id: Optional[AvlTree]       # I             Int. Index      Link@windows    .
-    queue:      Optional[AutoIncQueue]  # Q             -               Ext. Index      .
+    queue:      Optional[AutoIncQueue]  # Q             -               Link@w          .
 
     def __init__(self, s, q: int = 2):
         if not isinstance(s, list):
@@ -46,7 +62,7 @@ class Algorithm1:
         if q != 2:
             raise NotImplementedError()
         self.input = s
-        self.w = []
+        self.w = None
         self.n = len(s) + 1
         self.len = 0
         self.q = q
@@ -67,13 +83,13 @@ class Algorithm1:
     def encode(self):
         w_list = self.input + [bit(1)] + ([bit(0)] * (self.log_n + 1))
         # TODO: Make self.w a LinkedList so that removal of a window is O(k)
-        self.w = LinkedList(iterator=w_list)
+        self.w: LinkedList = LinkedList.from_iterable(w_list)
 
         self.len = len(self.w)
 
         # Initialize data structures (see README for details)
-        self.index_in = DeltaTree()
-        self.index_ex = LinkedList()
+        self.index_ex = LinkedList.from_iterable(range(self.len))
+        self.index_in = DeltaTree.from_sorted(list(self.index_ex))
         self.windows = Hashtable(self.len)
         self.windows_id = AvlTree()
         self.queue = AutoIncQueue(range(self.len), increment_until=self.len)
@@ -84,68 +100,52 @@ class Algorithm1:
 
     def eliminate(self):
         while True:
-            # TODO: Maintain a current node on input and use queue.prev to know
-            #       whether to jump to next or to jump to head.
-            #       This is so that the removal of a window is O(k)
-            input_iter = None
+            link_in: Optional[Link] = None
 
             if not self.queue.empty():
-                # There are more windows to check
+                # There are more input bits to check
                 j_ex = self.queue.pop()
+                j_prev = self.queue.prev
+                if j_prev + 1 == j_ex:
+                    link_in = link_in.next
+                elif j_ex == 0:
+                    link_in = self.w.head
+                else:
+                    raise Exception("Should not be here")
+
                 win_j: Optional[window] = self.window_at(j_ex)
                 if win_j is None:
-                    # TODO: Windows done, check (log_n + 1)-RLL
-                    raise NotImplementedError()
+                    # TODO: When no more windows, check (log_n + 1)-RLL
+                    # raise NotImplementedError()
+                    break
 
-                index_ex_link: Optional[Link] = self.windows.get(win_j)
-                if index_ex_link is None:
-                    # New window who dis
-                    j_in = self.index_in[j_ex]
-                    link_index_ex = Link(j_in, j_ex)
-                    self.index_ex.push(link_index_ex, prev=self.index_ex.tail)
-                    link_window = self.windows.put(win_j, link_index_ex)
-                    self.windows_id.insert(j_in, link_window)
-                    # TODO: Continue according to the algorithm described in my sketch paper labeled: ( * This * )
-                else:
-                    i_in, i_ex = index_ex_link.key, index_ex_link.value
-                    # j_in = self.index_in[j_ex]
-                    self.index_in.delta_add(i_ex + self.k - 1, self.len, 1)
+                link_index_ex_j: Link = self.index_in[j_ex]
+                j_in = link_index_ex_j.key
+                assert (j_ex == link_index_ex_j.value)
+
+                link_index_ex_i: Optional[Link] = self.windows.get(win_j)
+                if link_index_ex_i is not None:
+                    i_in, i_ex = link_index_ex_i.key, link_index_ex_i.value
+                    self.index_in.delta_add(i_ex + self.k - 1, len(self.index_in), 1)
                     self.index_in.delta_add(0, i_ex + self.k - 2, -(self.k - 1))
-                    min_in = self.index_ex.head.key
+                    # min_in = self.index_ex.head.key
                     self.queue.extend(range(self.k - 2, -1, -1))
+                    self.w.remove_window_before(link_in.next, self.k)
+                    self.w.extendleft(LinkedList.from_iterable([0] + b(i_ex, self.log_n) + b(j_ex, self.log_n)))
+                    self.windows_id.remove(i_in)
 
-                    # for i, key in enumerate(range(min_in - self.k + 1, min_in)):
-                    #     link_index_ex = Link(i, key)
-                    #     self.index_ex.push(link_index_ex, prev=None)
-                    #     self.windows_id
-                    #     self.windows
-            else:  # Queue is empty: either RLL, case 2 or done
-                pass
+                link_window = self.windows.put(win_j, link_index_ex_j)
+                self.windows_id.insert(j_in, link_window)
+
+            else:  # Queue is empty: either RLL, case 2 or done (not sure which)
+                # pass
+                break
 
     def expand(self):
         while len(self.w) < self.n:
-            raise NotImplementedError()
+            # raise NotImplementedError()
+            break
         self.w = self.w[:self.n]
 
     def output(self):
         return self.w
-
-    def handle_primal_identical(self, i, j):
-        # TODO: This is old. Kill your darling and start from zero.
-        # Step 0:
-        # From the internal indexing perspective, i and j might satisfy i > j
-        # This might be the case when a newly-added window at the beginning of self.w exists in the already-seen input
-        # So let us ensure i < j
-        assert i != j
-        if i > j:
-            i = i ^ j
-            j = i ^ j
-            i = i ^ j
-
-        # Step 1:
-        # Move (internal) indices [0, i - 1] to [k - 1, i + k - 2]
-        return self.w + i  # Just to suppress IDE complaints
-
-        # Step 2:
-
-        pass

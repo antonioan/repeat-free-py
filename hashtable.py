@@ -19,23 +19,6 @@ class Entry:
         return str(self.value)
 
 
-class Link:
-    """ Link
-        Used in the ChainedHashtable, a Link is a (key, value) pair for use in a linked list.
-    """
-
-    def __init__(self, key=0, value=0, next=None):
-        self.key = key
-        self.value = value
-        self.next = next
-
-    def __str__(self):
-        if self.next is None:
-            return str(self.value) + " "
-        else:
-            return str(self.value) + " " + str(self.next)
-
-
 class Hash:
     @staticmethod
     def division_hash(key, size) -> int:
