@@ -14,6 +14,8 @@ class Window:
 """
 
 
+# TODO: Sphinx
+
 # User-defined types
 bit = NewType('bit', int)
 window = NewType('window', Tuple[bit, ...])
@@ -42,6 +44,7 @@ def q_ary(n, q, width) -> List[bit]:
 
 
 class Algorithm1:
+    # region Parameters
     # FIELD     TYPE                    SKETCH NAME     DOMAIN          RANGE           DESCRIPTION
     input:      List[bit]               # s             [n]             bit             .
     w:          Optional[LinkedList]    # w             [len]           bit             .
@@ -55,6 +58,7 @@ class Algorithm1:
     windows:    Optional[Hashtable]     # W             window          Link@index_ex   .
     windows_id: Optional[AvlTree]       # I             Int. Index      Link@windows    .
     queue:      Optional[AutoIncQueue]  # Q             -               Link@w          .
+    # endregion
 
     def __init__(self, s, q: int = 2):
         if not isinstance(s, list):
@@ -74,17 +78,9 @@ class Algorithm1:
         self.windows_id = None
         self.queue = None
 
-    def window_at(self, j_ex) -> Optional[window]:
-        if j_ex < 0 or j_ex + self.k - 1 >= self.len:
-            return None
-        # Tuple is a hashable immutable object, best for using as key
-        return window(tuple(self.w[j_ex:j_ex + self.k - 1]))
-
-    def encode(self):
-        w_list = self.input + [bit(1)] + ([bit(0)] * (self.log_n + 1))
-        # TODO: Make self.w a LinkedList so that removal of a window is O(k)
+    def encode(self, _debug_no_append=False):
+        w_list = self.input + [bit(1)] + ([bit(0)] * (self.log_n + 1)) if not _debug_no_append else self.input
         self.w: LinkedList = LinkedList.from_iterable(w_list)
-
         self.len = len(self.w)
 
         # Initialize data structures (see README for details)
@@ -104,22 +100,23 @@ class Algorithm1:
 
             if not self.queue.empty():
                 # There are more input bits to check
-                j_ex = self.queue.pop()
+                j_ex = self.queue.popleft()
                 j_prev = self.queue.prev
-                if j_prev + 1 == j_ex:
-                    link_in = link_in.next
-                elif j_ex == 0:
+                if j_ex == 0:
                     link_in = self.w.head
+                elif j_ex == j_prev + 1:
+                    link_in = link_in.next
                 else:
+                    assert self.queue.prev
                     raise Exception("Should not be here")
 
-                win_j: Optional[window] = self.window_at(j_ex)
+                win_j: Optional[window] = window(tuple(self.w.get_window_at(link_in.next, self.k)))
                 if win_j is None:
                     # TODO: When no more windows, check (log_n + 1)-RLL
                     # raise NotImplementedError()
                     break
 
-                link_index_ex_j: Link = self.index_in[j_ex]
+                link_index_ex_j: Link = self.index_in.get(j_ex)
                 j_in = link_index_ex_j.key
                 assert (j_ex == link_index_ex_j.value)
 
@@ -128,7 +125,6 @@ class Algorithm1:
                     i_in, i_ex = link_index_ex_i.key, link_index_ex_i.value
                     self.index_in.delta_add(i_ex + self.k - 1, len(self.index_in), 1)
                     self.index_in.delta_add(0, i_ex + self.k - 2, -(self.k - 1))
-                    # min_in = self.index_ex.head.key
                     self.queue.extend(range(self.k - 2, -1, -1))
                     self.w.remove_window_before(link_in.next, self.k)
                     self.w.extendleft(LinkedList.from_iterable([0] + b(i_ex, self.log_n) + b(j_ex, self.log_n)))

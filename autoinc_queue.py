@@ -40,7 +40,7 @@ class AutoIncQueue(deque):
         if len(self) == 1 and (i is None or i == 0) and self._autoincrement and self[-1] < self._increment_until:
             self.appendleft(self._increment_func(self[-1]))
         self._prev = self[-1]
-        return deque.pop(self, i)
+        return deque.pop(self)
 
     def popleft(self):
         if len(self) == 1 and self._autoincrement and self[0] < self._increment_until:

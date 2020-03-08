@@ -2,21 +2,8 @@
 
 import abc
 import math
-from typing import List, Optional
+from typing import List, Optional, Callable
 from linked_list import *
-
-
-class Entry:
-    """ Entry
-        Used in every hashtable but the ChainedHashtable, an Entry is a (key, value) pair
-    """
-
-    def __init__(self, key=0, value=0):
-        self.key = key
-        self.value = value
-
-    def __str__(self):
-        return str(self.value)
 
 
 class Hash:
@@ -53,9 +40,10 @@ class ChainedHashtable:
         A linked list of Keys and Values are stored in the links array, which holds a linked list of all mapped values
     """
 
-    def __init__(self, size=32):
+    def __init__(self, size=32, pre_hash: Optional[Callable] = None):
         self.size: int = size
         self.links: List[Optional[LinkedList]] = [None] * self.size
+        self.pre_hash = pre_hash if pre_hash else lambda x: x.__hash__()
 
     def get(self, key):
         llist = self.links[self.hash(key)]
@@ -112,7 +100,7 @@ class ChainedHashtable:
         self.put(value, value)
 
     def hash(self, key):
-        return Hash.division_hash(key, self.size)
+        return Hash.division_hash(self.pre_hash(key) if self.pre_hash else key, self.size)
 
     def __str__(self):
         lines = []
@@ -122,6 +110,20 @@ class ChainedHashtable:
             else:
                 lines.append("" + str(i) + "\t" + str(self.links[i]))
         return "\n".join(lines)
+
+
+# region Associative Hashtables
+class Entry:
+    """ Entry
+        Used in every hashtable but the ChainedHashtable, an Entry is a (key, value) pair
+    """
+
+    def __init__(self, key=0, value=0):
+        self.key = key
+        self.value = value
+
+    def __str__(self):
+        return str(self.value)
 
 
 class AssociativeHashtable:
@@ -214,3 +216,5 @@ class DoubleHashtable(AssociativeHashtable):
     """
     def hash(self, key, i):
         return Hash.double_hash(key, i, self.size)
+
+# endregion

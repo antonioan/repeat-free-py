@@ -1,5 +1,8 @@
 from fenwick import FenwickTree
 from avl_rank import AvlRankTree
+from algorithm1 import *
+
+# region Unit Tests
 
 test_silent = 2
 
@@ -27,6 +30,7 @@ def test_fenwick():
         print("Sorry...")
 
 
+# region Need Refactoring
 def test_avl_rank():
     test_name = 'avl_rank'
     tests_passed = 0
@@ -68,6 +72,7 @@ def test_avl_rank():
         print("Congrats! All tests for avl_rank passed.")
     else:
         print("Sorry... Only", tests_passed, "passed for avl_rank.")
+# endregion
 
 
 def test_all():
@@ -105,9 +110,11 @@ def test_first(run=0):
     if run == 0:
         return
     pass
+# endregion
 
 
 if __name__ == '__main__':
-    test_first(1)
-    test_all()
-    test_more()
+    s = list('00010011011000')
+    alg = Algorithm1(s)
+    alg.encode(_debug_no_append=True)
+    print(alg.output())

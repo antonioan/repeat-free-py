@@ -37,13 +37,13 @@ from typing import Optional, Tuple, NamedTuple, List
 class FindResult(NamedTuple):
     exists: bool
     key:    int
-    value:  Optional
+    value:  object
     rank:   int
     deltas: int
 
 
-class AvlRankTree(object):
-    class Node(object):
+class AvlRankTree:
+    class Node:
         def __init__(self, key, value):
             self.key = key
             self.left: Optional[AvlRankTree.Node] = None
@@ -85,9 +85,9 @@ class AvlRankTree(object):
             raise ValueError('Index must not be None')
 
         # Insertion to beginning or end of tree is O(1)
-        if value <= self.root.left_most.key:
+        if self.root and value <= self.root.left_most.key:
             self.root.left_most = AvlRankTree._insert(self.root.left_most, key, value)
-        elif value >= self.root.right_most.key:
+        elif self.root and value >= self.root.right_most.key:
             self.root.right_most = AvlRankTree._insert(self.root.right_most, key, value)
         else:
             self.root = AvlRankTree._insert(self.root, key, value)
@@ -355,15 +355,19 @@ class AvlRankTree(object):
                                                                          'right_edge': True}, root)
         )
 
-    def __getitem__(self, key):
+    def __getitem__(self, key):  # -> int
         existent, existent_key, value, _, deltas = self.find(key)
         return value + deltas if value is not None else None
+
+    def get(self, key):
+        existent, existent_key, value, _, _ = self.find(key)
+        return value
 
     @classmethod
     def from_sorted(cls, sorted_list: List):
         tree = cls()
         tree.root = AvlRankTree._from_sorted(sorted_list)
-        tree.left_most, tree.right_most = tree.root, tree.root
+        AvlRankTree._local_update(tree.root)
         return tree
 
     @staticmethod
@@ -371,8 +375,8 @@ class AvlRankTree(object):
         if len(sorted_list) == 0:
             return None
 
-        mid: int = (len(sorted_list)) // 2
-        root = AvlRankTree.Node(sorted_list[mid], sorted_list[mid])
+        mid = (len(sorted_list)) // 2
+        root = AvlRankTree.Node(mid, sorted_list[mid])
         root.left = AvlRankTree._from_sorted(sorted_list[:mid])
         root.right = AvlRankTree._from_sorted(sorted_list[mid + 1:])
         AvlRankTree._local_update(root)

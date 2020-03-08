@@ -1,5 +1,5 @@
 # Source: https://github.com/Darthfett/Hashtable/blob/master/LinkedList.py
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Reversible
 
 
 class Link:
@@ -51,14 +51,16 @@ class LinkedList:
         new.prev = prev
         if prev is None:
             new.next = self.head
-            new.next.prev = new
+            if new.next:
+                new.next.prev = new
             self.head = new
         else:
             new.next = prev.next
-            new.next.prev = new
+            if new.next:
+                new.next.prev = new
             prev.next = new
-            if new.next is None:
-                self.tail = new
+        if new.next is None:
+            self.tail = new
         self.len += 1
 
     def pop(self, index: int = 0):
@@ -136,13 +138,25 @@ class LinkedList:
             prev_node.next = kth_node
         self.len -= k
 
+    def get_window_before(self, next_node: Optional[Link], k: int):
+        self.get_window_at(prev_node=(next_node.prev if next_node else self.tail).advance(-k), k=k)
+
+    def get_window_at(self, prev_node: Optional[Link], k: int):
+        window = []
+        for i in range(k):
+            prev_node = prev_node.next
+            window += prev_node.value
+        return window
+
     def extend(self, other: 'LinkedList'):
         for node in other:
             self.push(node, self.tail)
 
     def extendleft(self, other: 'LinkedList'):
+        prev = None
         for node in other:
-            self.push(node)
+            self.push(node, prev)
+            prev = node
 
     @classmethod
     def from_iterable(cls, iterable: Iterable[int]) -> 'LinkedList':
