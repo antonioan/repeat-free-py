@@ -143,9 +143,13 @@ class LinkedList:
 
     def get_window_at(self, prev_node: Optional[Link], k: int):
         window = []
+        if not prev_node:
+            prev_node = self.head
+            k -= 1
+            window += [prev_node.value]
         for i in range(k):
             prev_node = prev_node.next
-            window += prev_node.value
+            window += [prev_node.value]
         return window
 
     def extend(self, other: 'LinkedList'):

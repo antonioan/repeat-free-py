@@ -100,8 +100,8 @@ class Algorithm1:
 
             if not self.queue.empty():
                 # There are more input bits to check
-                j_ex = self.queue.popleft()
                 j_prev = self.queue.prev
+                j_ex = self.queue.popleft()
                 if j_ex == 0:
                     link_in = self.w.head
                 elif j_ex == j_prev + 1:
@@ -110,7 +110,7 @@ class Algorithm1:
                     assert self.queue.prev
                     raise Exception("Should not be here")
 
-                win_j: Optional[window] = window(tuple(self.w.get_window_at(link_in.next, self.k)))
+                win_j: Optional[window] = window(tuple(self.w.get_window_at(link_in.prev, self.k)))
                 if win_j is None:
                     # TODO: When no more windows, check (log_n + 1)-RLL
                     # raise NotImplementedError()
@@ -125,8 +125,8 @@ class Algorithm1:
                     i_in, i_ex = link_index_ex_i.key, link_index_ex_i.value
                     self.index_in.delta_add(i_ex + self.k - 1, len(self.index_in), 1)
                     self.index_in.delta_add(0, i_ex + self.k - 2, -(self.k - 1))
-                    self.queue.extend(range(self.k - 2, -1, -1))
-                    self.w.remove_window_before(link_in.next, self.k)
+                    self.queue.extendleft(range(0, self.k - 1))
+                    self.w.remove_window_at(link_in.prev, self.k)
                     self.w.extendleft(LinkedList.from_iterable([0] + b(i_ex, self.log_n) + b(j_ex, self.log_n)))
                     self.windows_id.remove(i_in)
 
