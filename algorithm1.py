@@ -1,8 +1,11 @@
 from math import log, ceil
-from typing import Optional, List, NewType, Tuple
+from typing import Optional, List, NewType, Tuple, Any, Union, Dict
 from autoinc_queue import AutoIncQueue
 from avl_rank import AvlRankTree as DeltaTree, AvlRankTree as AvlTree
 from hashtable import ChainedHashtable as Hashtable, LinkedList, Link
+
+# Using a dictionary to parse input, because all relevant complexity times are O(1):
+# https://www.ics.uci.edu/~brgallar/week8_2.html
 
 """ Data Classes from Python 3.7 are AMAZING
 from dataclasses import dataclass, field
@@ -47,16 +50,15 @@ class Algorithm1:
     # region Parameters
     # FIELD     TYPE                    SKETCH NAME     DOMAIN          RANGE           DESCRIPTION
     input:      List[bit]               # s             [n]             bit             .
-    w:          Optional[LinkedList]    # w             [len]           bit             .
+    w:          Dict[int, bit]          # w             [len]           bit             .
     n:          int                     # n             -               -               .
     len:        int                     # n_tag         -               Max Ext. Index  .
     q:          int                     # q             -               -               .
     log_n:      int                     # log_n         -               -               .
     k:          int                     # k             -               -               .
-    index_in:   Optional[DeltaTree]     # M             Ext. Index      Int. Index      .
-    index_ex:   Optional[LinkedList]    # L             Int. Index      Ext. Index      .
+    index_in:   Optional[DeltaTree]     # M             Ext. Index      Link@index_ex   .
+    index_ex:   Optional[LinkedList]    # L             Int. Index      Link@index_in   .
     windows:    Optional[Hashtable]     # W             window          Link@index_ex   .
-    windows_id: Optional[AvlTree]       # I             Int. Index      Link@windows    .
     queue:      Optional[AutoIncQueue]  # Q             -               Link@w          .
     # endregion
 
@@ -66,7 +68,7 @@ class Algorithm1:
         if q != 2:
             raise NotImplementedError()
         self.input = s
-        self.w = None
+        self.w = dict()
         self.n = len(s) + 1
         self.len = 0
         self.q = q
@@ -75,19 +77,23 @@ class Algorithm1:
         self.index_in = None
         self.index_ex = None
         self.windows = None
-        self.windows_id = None
         self.queue = None
 
     def encode(self, _debug_no_append=False):
         w_list = self.input + [bit(1)] + ([bit(0)] * (self.log_n + 1)) if not _debug_no_append else self.input
-        self.w: LinkedList = LinkedList.from_iterable(w_list)
+        self.w = dict(zip(range(len(w_list)), w_list))
         self.len = len(self.w)
 
         # Initialize data structures (see README for details)
+
+        # index_{ex,in} are INTERTWINED
         self.index_ex = LinkedList.from_iterable(range(self.len))
-        self.index_in = DeltaTree.from_sorted(list(self.index_ex))
+        self.index_in, node_list = DeltaTree.from_sorted(list(self.index_ex))
+        node_iter = iter(node_list)
+        for link in self.index_ex:
+            link.value = next(node_iter)
+
         self.windows = Hashtable(self.len)
-        self.windows_id = AvlTree()
         self.queue = AutoIncQueue(range(self.len), increment_until=self.len)
 
         # Run algorithm
@@ -96,26 +102,14 @@ class Algorithm1:
 
     def eliminate(self):
         while True:
-            link_in: Optional[Link] = None
-
             if not self.queue.empty():
                 # There are more input bits to check
-                j_prev = self.queue.prev
                 j_ex = self.queue.popleft()
-                if j_ex == 0:
-                    link_in = self.w.head
-                elif j_ex == j_prev + 1:
-                    link_in = link_in.next
-                else:
-                    assert self.queue.prev
-                    raise Exception("Should not be here")
-
-                win_j: Optional[window] = window(tuple(self.w.get_window_at(link_in.prev, self.k)))
-                if win_j is None:
+                if j_ex + self.k >= self.len:
                     # TODO: When no more windows, check (log_n + 1)-RLL
                     # raise NotImplementedError()
                     break
-
+                win_j: Optional[window] = window(tuple([self.w[key] for key in range(j_ex, j_ex + self.k)]))
                 link_index_ex_j: Link = self.index_in.get(j_ex)
                 j_in = link_index_ex_j.key
                 assert (j_ex == link_index_ex_j.value)
@@ -126,11 +120,17 @@ class Algorithm1:
                     self.index_in.delta_add(i_ex + self.k - 1, len(self.index_in), 1)
                     self.index_in.delta_add(0, i_ex + self.k - 2, -(self.k - 1))
                     self.queue.extendleft(range(0, self.k - 1))
-                    self.w.remove_window_at(link_in.prev, self.k)
-                    self.w.extendleft(LinkedList.from_iterable([0] + b(i_ex, self.log_n) + b(j_ex, self.log_n)))
+                    for i in range(i_ex, i_ex + self.k):
+                        del self.w[i]
+                    prepended = [0] + b(i_ex, self.log_n) + b(j_ex, self.log_n)
+                    self.w += dict(zip(range(len(prepended)), prepended))
+
+                    # TODO: Remove link@windows and THEN this link
                     self.windows_id.remove(i_in)
 
                 link_window = self.windows.put(win_j, link_index_ex_j)
+
+                # TODO: This is needed to remove the <=(2k-1) windows that are invalidated after window removal
                 self.windows_id.insert(j_in, link_window)
 
             else:  # Queue is empty: either RLL, case 2 or done (not sure which)
