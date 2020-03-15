@@ -366,18 +366,23 @@ class AvlRankTree:
     @classmethod
     def from_sorted(cls, sorted_list: List):
         tree = cls()
-        tree.root = AvlRankTree._from_sorted(sorted_list)
+        node_list = [None] * len(sorted_list)
+        tree.root = AvlRankTree._from_sorted(sorted_list, node_list)
         AvlRankTree._local_update(tree.root)
-        return tree
+        return tree, node_list
 
     @staticmethod
-    def _from_sorted(sorted_list: List) -> Optional['AvlRankTree.Node']:
+    def _from_sorted(sorted_list: List, node_list: List = None) -> Optional['AvlRankTree.Node']:
         if len(sorted_list) == 0:
             return None
 
         mid = (len(sorted_list)) // 2
         root = AvlRankTree.Node(mid, sorted_list[mid])
-        root.left = AvlRankTree._from_sorted(sorted_list[:mid])
-        root.right = AvlRankTree._from_sorted(sorted_list[mid + 1:])
+
+        if node_list:
+            node_list[mid] = root
+
+        root.left = AvlRankTree._from_sorted(sorted_list[:mid], node_list)
+        root.right = AvlRankTree._from_sorted(sorted_list[mid + 1:], node_list)
         AvlRankTree._local_update(root)
         return root
