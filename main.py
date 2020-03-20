@@ -1,6 +1,6 @@
 from fenwick import FenwickTree
 from avl_rank import AvlRankTree
-from algorithm1 import *
+from crazy_algorithm1 import *
 
 # region Unit Tests
 
