@@ -112,11 +112,11 @@ class Algorithm1:
                 win_j: Optional[window] = window(tuple([self.w[key] for key in range(j_ex, j_ex + self.k)]))
                 link_index_ex_j: Link = self.index_in.get(j_ex)
                 j_in = link_index_ex_j.key
-                assert (j_ex == link_index_ex_j.value)
+                assert (j_ex == link_index_ex_j.value.value)
 
                 link_index_ex_i: Optional[Link] = self.windows.get(win_j)
                 if link_index_ex_i is not None:
-                    i_in, i_ex = link_index_ex_i.key, link_index_ex_i.value
+                    i_in, i_ex = link_index_ex_i.key, link_index_ex_i.value.value
                     self.index_in.delta_add(i_ex + self.k - 1, len(self.index_in), 1)
                     self.index_in.delta_add(0, i_ex + self.k - 2, -(self.k - 1))
                     self.queue.extendleft(range(0, self.k - 1))
@@ -125,6 +125,7 @@ class Algorithm1:
                     prepended = [0] + b(i_ex, self.log_n) + b(j_ex, self.log_n)
                     self.w += dict(zip(range(len(prepended)), prepended))
 
+                    # self.
                     # TODO: Remove link@windows and THEN this link
                     self.windows_id.remove(i_in)
 
