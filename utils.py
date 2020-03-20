@@ -1,23 +1,25 @@
-from math import log, ceil
-from typing import NewType, Tuple
+from typing import NewType, Tuple, List
 
+# User-defined types
+# bit = NewType('bit', int)
+# window = NewType('window', Tuple[bit, ...])
 
 
 # will probably be used with n := log_n
-def cr(n, w) -> List[bit]:
+def cr(n, w):
     out = w
     while len(out) < n:
         out += w
     return out[:n]
 
 
-def b(n, width: int = 0) -> List[bit]:
+def b(n, width: int = 0):
     return list(format(n, 'b').zfill(width))
 
 
-def q_ary(n, q, width) -> List[bit]:
+def q_ary(n, q, width):
     if n == 0:
-        return [bit(0)] * width
+        return [0] * width
     nums = []
     while n:
         n, r = n / q

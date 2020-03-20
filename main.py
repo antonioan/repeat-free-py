@@ -1,6 +1,7 @@
 from fenwick import FenwickTree
 from avl_rank import AvlRankTree
-from crazy_algorithm1 import *
+# from crazy_algorithm1 import *
+from algorithm1 import *
 
 # region Unit Tests
 
@@ -113,8 +114,17 @@ def test_first(run=0):
 # endregion
 
 
+# 00010011011000
+
 if __name__ == '__main__':
-    s = list('00010011011000')
-    alg = Algorithm1(s)
-    alg.encode(_debug_no_append=True)
-    print(alg.output())
+    w = list('0000000000000000000')  # 0000000000000000000000000000000000000000000000000000')
+    w = [int(p) for p in w]
+    n = len(w) + 1
+    log_n = ceil(log(n, 2))
+    print('n      =', n)
+    print('log_n  =', log_n)
+    print('k      =', 2 * log_n + 2)
+    print('w      =', w)
+    alg = Algorithm1(w)
+    alg.encode()
+    print('output =', alg.output())
