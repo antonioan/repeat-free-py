@@ -1,31 +1,17 @@
 from math import log, ceil
 from typing import Optional, List, NewType, Tuple, Dict
+from util import *
 
-# User-defined types
-bit = NewType('bit', int)
-window = NewType('window', Tuple[bit, ...])
+"""
 
+n * log_n       iterations
+log_n           new windows need to be compared per iteration
+n               comparisons for each window
+log_n           operations for each comparison
 
-# will probably be used with n := log_n
-def cr(n, w) -> List[bit]:
-    out = w
-    while len(out) < n:
-        out += w
-    return out[:n]
+TOTAL: n^2 * (log_n)^3
 
-
-def b(n, width: int = 0) -> List[bit]:
-    return list(format(n, 'b').zfill(width))
-
-
-def q_ary(n, q, width) -> List[bit]:
-    if n == 0:
-        return [bit(0)] * width
-    nums = []
-    while n:
-        n, r = divmod(n, q)
-        nums.append(r)
-    return list(reversed(''.join(nums).zfill(width)))
+"""
 
 
 class Algorithm1:
