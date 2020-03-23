@@ -38,6 +38,6 @@ if __name__ == '__main__':
 # So for one test, on average, it is called 2^(27-9)=2^18 times. Since n=2^8, we expected a lot more times...
 # After inlining 'identical', profiling shows:
 # Now it takes 78sec (diff=31sec). This means that one test on average takes around 150msec.
-# According to Competitive Programming, 300M operations happen in 1 sec, so here, we have 45M operations.
-# Since n=2^8, we expected 2^(8*3+2)=2^26 which is roughly 64M operations.
+# According to Competitive Programming, 100M operations happen in 1 sec, so here, we have 15M operations.
+# Since n=2^8, we expected 2^(8*3+2*2)=2^28 which is roughly 256M operations...
 
