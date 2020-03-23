@@ -1,8 +1,4 @@
-from typing import NewType, Tuple, List
-
-# User-defined types
-# bit = NewType('bit', int)
-# window = NewType('window', Tuple[bit, ...])
+from typing import NewType, Tuple, List, Optional
 
 
 # will probably be used with n := log_n
@@ -17,6 +13,8 @@ def b(n, width: int = 0):
     return list(format(n, 'b').zfill(width))
 
 
+# Time complexity: O(log(n, base=q))
+# Place complexity: O(log_q) * O(log(n, base=q))
 def q_ary(n, q, width):
     if n == 0:
         return [0] * width

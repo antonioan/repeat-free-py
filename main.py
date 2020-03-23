@@ -1,130 +1,43 @@
-from fenwick import FenwickTree
-from avl_rank import AvlRankTree
-# from crazy_algorithm1 import *
+import contextlib
+import io
+import numpy as np
 from algorithm1 import *
-
-# region Unit Tests
-
-test_silent = 2
+from utils import b
 
 
-def test_print(i, b, name):
-    if test_silent == 0:
-        print("TEST", "PASSED" if b else "FAILED", "-", name, i)
-    elif test_silent == 2 and not b:
-        print("TEST FAILED -", name, i)
-    return b
-
-
-def test_fenwick():
-    test_name = 'fenwick'
-    tests_passed = 0
-    arr = [1, 2, 3, 4, 5]
-    tree = FenwickTree(arr=arr)
-    tests_passed += test_print(1, tree == [1, 2, 3, 4, 5], test_name)
-    tree.add_range(1, 3, -2)
-    tests_passed += test_print(2, tree == [1, 0, 1, 2, 5], test_name)
-    tests_passed += test_print(3, tree[1] == 0, test_name)
-    if tests_passed == 3:
-        print("Congrats! All tests for fenwick passed.")
-    else:
-        print("Sorry...")
-
-
-# region Need Refactoring
-def test_avl_rank():
-    test_name = 'avl_rank'
-    tests_passed = 0
-    inputs = [5, 3, 6, 1, 4]
-    tree = AvlRankTree()
-    for i in inputs:
-        tree.insert(i)
-    tests_passed += test_print(1, tree.list(1, 6)[0] == [1, 3, 4, 5, 6], test_name)
-    # print(tree.list(1, 6))
-    tree.delta_add(1, 4, delta=5)  # add D=5 to [1, 4]
-    # print(tree.list(1, 6))
-    # input()
-    for times in range(3):
-        existent, existent_key, _, rank, deltas = tree.find(5)
-        tests_passed += test_print(times + 2 + 1100, deltas == 0, test_name)
-        tests_passed += test_print(times + 2 + 1200, rank == 4 + times, test_name)
-        tests_passed += test_print(times + 2 + 1300, existent_key == 5, test_name)
-        tests_passed += test_print(times + 2 + 1400, existent is True, test_name)
-        existent, existent_key, _, rank, deltas = tree.find(3)
-        tests_passed += test_print(times + 2 + 2100, deltas == 5, test_name)
-        tests_passed += test_print(times + 2 + 2200, rank == 2 + times, test_name)
-        tests_passed += test_print(times + 2 + 2300, existent_key == 3, test_name)
-        tests_passed += test_print(times + 2 + 2400, existent is True, test_name)
-        existent, existent_key, _, rank, deltas = tree.find(4)
-        tests_passed += test_print(times + 2 + 3100, deltas == 5, test_name)
-        tests_passed += test_print(times + 2 + 3200, rank == 3 + times, test_name)
-        tests_passed += test_print(times + 2 + 3300, existent_key == 4, test_name)
-        tests_passed += test_print(times + 2 + 3400, existent is True, test_name)
-        existent, existent_key, _, rank, deltas = tree.find(0)
-        tests_passed += test_print(times + 2 + 4100, deltas == 0, test_name)
-        tests_passed += test_print(times + 2 + 4200, rank == (times > 0), test_name)
-        tests_passed += test_print(times + 2 + 4300, (existent_key is None) == (times == 0), test_name)
-        tests_passed += test_print(times + 2 + 4400, (existent is False) == (times == 0), test_name)
-        if times == 0:
-            tree.insert(0)
-        elif times == 1:
-            tree.insert(2)
-    if tests_passed == 1 + 3 * 4 * 4:
-        print("Congrats! All tests for avl_rank passed.")
-    else:
-        print("Sorry... Only", tests_passed, "passed for avl_rank.")
-# endregion
-
-
-def test_all():
-    test_fenwick()
-    test_avl_rank()
-    test_lambda_as_arg()
-
-
-def test_more():
-    print("MORE tests!")
-    seq = [0, 0, 0, 1, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0]
-    fenwick = FenwickTree(arr=seq)
-    print(fenwick.values)
-    print(seq[-4:])
-
-
-def _lambda_as_arg(func):
-    ret = func()
-    return ret
-
-
-def test_lambda_as_arg():
-    test_name = 'lambda_as_arg'
-    ret = _lambda_as_arg(lambda: {'A': 0})
-    tests_passed = 0
-    tests_passed += test_print(1, ret is not None, test_name)
-    tests_passed += test_print(2, ret['A'] == 0, test_name)
-    if tests_passed == 2:
-        print("Congrats! All tests for lambda_as_arg passed.")
-    else:
-        print("Sorry...")
-
-
-def test_first(run=0):
-    if run == 0:
-        return
-    pass
-# endregion
-
-
-# 00010011011000
-
-if __name__ == '__main__':
-    w = list('0000000000000000000')  # 0000000000000000000000000000000000000000000000000000')
-    w = [int(p) for p in w]
-    n = len(w) + 1
+def run_test(w):
+    assert(len(w) == n - 1)
     log_n = ceil(log(n, 2))
     print('n      =', n)
     print('log_n  =', log_n)
     print('k      =', 2 * log_n + 2)
     print('w      =', w)
-    alg = Algorithm1(w)
-    alg.encode()
-    print('output =', alg.output())
+    print('output =', Algorithm1().input(w).encode().output())
+
+
+# TEST PARAMETERS
+n = 2 ** 8  # Remember: Input is of length (n - 1)
+number_of_tests = 2 ** 9  # By the way they are created, two consecutive test inputs u, v satisfy u[1:] == v[:-1]
+average_percent_of_ones = 0.1  # As this gets closer to 0.5, less iterations are needed
+if __name__ == '__main__':
+    len_source = number_of_tests + n - 2
+    ones_in_source = int(len_source * average_percent_of_ones)
+    arr = np.array([1] * ones_in_source + [0] * (len_source - ones_in_source))
+    np.random.shuffle(arr)
+    source = list(arr)
+    for i in range(number_of_tests):
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            run_test(source[i:i + (n - 1)])
+        out = f.getvalue()
+        if i & 0b1111111 == 0:  # Print every 128-th output
+            print(out)
+
+# Before inlining 'identical', profiling shows:
+# When n=256, number_of_tests=512, the method 'identical' is called 142M times (~ 2^27), and the program takes 109sec.
+# So for one test, on average, it is called 2^(27-9)=2^18 times. Since n=2^8, we expected a lot more times...
+# After inlining 'identical', profiling shows:
+# Now it takes 78sec (diff=31sec). This means that one test on average takes around 150msec.
+# According to Competitive Programming, 300M operations happen in 1 sec, so here, we have 45M operations.
+# Since n=2^8, we expected 2^(8*3+2)=2^26 which is roughly 64M operations.
+
