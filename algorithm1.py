@@ -16,6 +16,13 @@ TIME                       SPACE
   n^2 * log_n        |       n * log_n      # must be similar to crazy_algorithm.py, but forgot
   n   * (log_n)^2    |       n^2            # see crazy_algorithm1.py (the queue has issues, though...)
 
+
+# Where do we go now?
+  1. Better time complexity (but worse space)     <- Most important
+>       TODO: Finish third implementation
+x 2. q-ary support                                <- Between easy and important
+> 3. Decoder                                      <- Easiest
+
 """
 
 
