@@ -26,14 +26,13 @@ x 2. q-ary support                                <- Between easy and important
 """
 
 
-class Algorithm1:
+class Encoder1:
     # region Parameters
-    # FIELD     TYPE                    SKETCH NAME     DESCRIPTION
-    w:          List[int]               # w             .
-    n:          int                     # n             .
-    q:          int                     # q             .
-    log_n:      int                     # log_n         .
-    k:          int                     # k             .
+    w:              List[int]
+    n:              int
+    q:              int
+    log_n:          int
+    k:              int
     # endregion
 
     def __init__(self, q: int = 2):
@@ -41,12 +40,10 @@ class Algorithm1:
             raise NotImplementedError()
         self.q = q
 
-    def input(self, w, is_codeword=False):
-        if not isinstance(w, list):
-            raise Exception("Input must be a list.")
+    def input(self, w: List):
         # Tested: `self.w = w` happens by reference (since `list` is mutable)
         self.w = w
-        self.n = len(w) + (not is_codeword)
+        self.n = len(w) + 1
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
         return self
@@ -71,8 +68,7 @@ class Algorithm1:
                     if self.w[i:i + self.k] != self.w[j:j + self.k]:  # not self.identical(i, j):
                         continue
                     found_identical_or_zero = True
-                    for _ in range(self.k):
-                        self.w.pop(i)
+                    self.w[i:i+self.k] = []
                     prepended = [0] + b(i, self.log_n) + b(j, self.log_n)
                     for p in reversed(prepended):
                         self.w.insert(0, int(p))
@@ -82,23 +78,21 @@ class Algorithm1:
                 if break_out:
                     break
             if not found_identical_or_zero:
-                found_zero_window = -1
+                zero_window_index = -1
                 curr_length = 0
                 for curr_index in range(len(self.w) - 1):
                     if self.w[curr_index] == 0:
                         curr_length += 1
                         if curr_length == self.log_n + 1:
-                            found_zero_window = curr_index - self.log_n
+                            zero_window_index = curr_index - self.log_n
                             break
                     elif self.w[curr_index] == 1:
                         curr_length = 0
-                if found_zero_window >= 0:
-                    # We are taking our time, popping in O(found_zero_window * log_n) = O(n * log_n)
-                    for _ in range(self.log_n + 1):
-                        self.w.pop(found_zero_window)
+                if zero_window_index >= 0:
+                    self.w[zero_window_index:zero_window_index + self.log_n + 1] = []
 
                     # One-by-one appending in O(len(appended))
-                    prepended = [1] + b(found_zero_window, self.log_n)
+                    prepended = [1] + b(zero_window_index, self.log_n)
                     for p in reversed(prepended):
                         self.w.insert(0, int(p))
                     found_identical_or_zero = True
@@ -148,6 +142,3 @@ class Algorithm1:
     def output(self):
         # O(n) place for the output only
         return self.w[:self.n]
-
-    def decode(self):
-        raise NotImplementedError()

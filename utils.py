@@ -13,6 +13,12 @@ def b(n, width: int = 0):
     return list(format(n, 'b').zfill(width))
 
 
+def b_rev(n_list: List):
+    result = 0
+    for digits in n_list:
+        result = (result << 1) | digits
+    return result
+
 # Time complexity: O(log(n, base=q))
 # Place complexity: O(log_q) * O(log(n, base=q))
 def q_ary(n, q, width):
