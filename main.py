@@ -7,7 +7,7 @@ from utils import b
 
 
 def run_test(w: List):
-    assert(len(w) == n - redundancy)
+    assert(len(w) == n - int(alg_params['redundancy']))
     log_n = ceil(log(n, 2))
     orig_w = w.copy()
     print('n      =', n)
@@ -25,7 +25,7 @@ def run_test(w: List):
 
 
 def run_main():
-    len_source = number_of_tests + n - 1 - redundancy
+    len_source = number_of_tests + n - 1 - int(alg_params['redundancy'])
     ones_in_source = int(len_source * average_percent_of_ones)
     arr = np.array([1] * ones_in_source + [0] * (len_source - ones_in_source))
     np.random.shuffle(arr)
@@ -34,21 +34,26 @@ def run_main():
     for i in range(number_of_tests):
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
-            res = run_test(source[i:i + (n - redundancy)])
+            res = run_test(source[i:i + (n - int(alg_params['redundancy']))])
         out = f.getvalue()
-        if i & 0b1111111 == 0:  # Print every 128-th output
-            print(out)
+        # if i & 0b1111111 == 0:  # Print every 128-th output
+        #     print(out)
         number_of_successes += res
+    print('r      =', int(alg_params['redundancy']))
+    print('rll+   =', int(alg_params['rll_extra']))
     print("Succeeded {} times out of {} ({}%)".format(number_of_successes, number_of_tests,
                                                       100. * number_of_successes / number_of_tests))
 
 
 # TEST PARAMETERS
-n = 2 ** 8                      # Remember: Input is of length (n - redundancy) (good choice: 2 ** 8)
-number_of_tests = 2 ** 9        # Two consecutive tests u, v satisfy u[1:] == v[:-1] (good choice: 2 ** 9)
-average_percent_of_ones = 0.1   # As this gets closer to 0.5, less iterations are needed (good choice: 0.1)
+n = 2 ** 7                      # Remember: Input is of length (n - redundancy) (good choice: 2 ** 8)
+number_of_tests = 2 ** 6        # Two consecutive tests u, v satisfy u[1:] == v[:-1] (good choice: 2 ** 9)
+average_percent_of_ones = 0.35   # As this gets closer to 0.5, less iterations are needed (good choice: 0.1)
 if __name__ == '__main__':
-    run_main()
+    alg_params['redundancy'] = 1; alg_params['rll_extra'] = 2; run_main()
+    alg_params['redundancy'] = 2; alg_params['rll_extra'] = 1; run_main()
+    alg_params['redundancy'] = 2; alg_params['rll_extra'] = 2; run_main()
+    alg_params['redundancy'] = 1; alg_params['rll_extra'] = 1; run_main()
 
 # region Anecdotes
 

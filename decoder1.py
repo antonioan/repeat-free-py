@@ -1,5 +1,6 @@
 from math import log, ceil
 from utils import *
+from encoder1 import alg_params
 
 """
 
@@ -36,6 +37,7 @@ class Decoder1:
     k:              int
     start_index:    int
     end_index:      int
+    zero_rll:       int
     # endregion
 
     def __init__(self, q: int = 2):
@@ -48,6 +50,7 @@ class Decoder1:
         self.n = len(w)
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
+        self.zero_rll = self.log_n + int(alg_params['rll_extra'])
         self.start_index = 0
         self.end_index = self.n
         return self
@@ -56,13 +59,13 @@ class Decoder1:
         self.start_index = 0
         self.end_index = self.n - 1
 
-        # Search for a (log_n + 1)-long run of zeros, or the last run of zeros
+        # Search for a (log_n + rll_extra)-long run of zeros, or the last run of zeros
         curr_length = 0
         for curr_index in range(len(self.w)):
             if self.w[curr_index] == 0:
                 curr_length += 1
-                if curr_length == self.log_n + 1:
-                    self.end_index = curr_index - self.log_n - 1
+                if curr_length == self.zero_rll:
+                    self.end_index = curr_index - self.zero_rll
                     break
             elif self.w[curr_index] == 1:
                 curr_length = 0
@@ -73,12 +76,12 @@ class Decoder1:
         while self.w[self.end_index] == 0:
             last_run += 1
             self.end_index -= 1
-        self.w.extend([0] * (self.log_n + 1 - last_run))
+        self.w.extend([0] * (self.zero_rll - last_run))
 
         # At this point, w[:self.end_index] is w' from the decoder description above
         # The relevant part of w is maintained to be w[self.start_index:self.end_index]
         # Note: The right-side limit (self.end_index) is exclusive
-        print('w-0    =', self.w[self.start_index:self.end_index + self.log_n + 2])
+        print('w-0    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
         # print('wstart =', self.start_index)
         # print('wend   =', self.end_index)
         while (self.end_index - self.start_index) < (self.n - 1):
@@ -86,16 +89,17 @@ class Decoder1:
             self.start_index += 1
             if phase == 0:
                 self.undo_phase1()
-                print('w-1    =', self.w[self.start_index:self.end_index + self.log_n + 2])
+                print('w-1    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
             else:  # elif phase == 1:
                 self.undo_phase2()
-                print('w-2    =', self.w[self.start_index:self.end_index + self.log_n + 2])
+                print('w-2    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
         print('dec*   =', self.w[self.start_index:self.end_index])
-        while self.w[self.start_index] == 1:
-            # Are we done yet?
-            self.start_index += 1
-            self.undo_phase2()
-            print('w-2*   =', self.w[self.start_index:self.end_index])
+        if int(alg_params['redundancy']) == 2:
+            while self.w[self.start_index] == 1:
+                # Are we done yet?
+                self.start_index += 1
+                self.undo_phase2()
+                print('w-2*   =', self.w[self.start_index:self.end_index])
         assert (self.end_index - self.start_index) == (self.n - 1)
         return self
 
@@ -119,8 +123,8 @@ class Decoder1:
         self.start_index += self.log_n
 
         # Set slice in list - this takes O(SLICE SIZE + LIST LENGTH) = O(n)
-        self.w[(self.start_index + index):(self.start_index + index)] = [0] * (self.log_n + 1)
-        self.end_index += self.log_n + 1
+        self.w[(self.start_index + index):(self.start_index + index)] = [0] * self.zero_rll
+        self.end_index += self.zero_rll
 
     def output(self):
-        return self.w[self.start_index + 1:self.end_index]
+        return self.w[self.start_index + int(alg_params['redundancy']) - 1:self.end_index]

@@ -25,7 +25,7 @@ x 2. q-ary support                                <- Between easy and important
 
 """
 
-redundancy: int = 2
+alg_params = {'redundancy': 1, 'rll_extra': 2}
 
 
 class Encoder1:
@@ -35,26 +35,31 @@ class Encoder1:
     q:              int
     log_n:          int
     k:              int
+    zero_rll:       int
     # endregion
 
     def __init__(self, q: int = 2):
         if q != 2:
             raise NotImplementedError()
+        assert 1 <= int(alg_params['redundancy']) <= 2
+        assert 1 <= int(alg_params['rll_extra']) <= 2
         self.q = q
 
     def input(self, w: List):
         # Tested: `self.w = w` happens by reference (since `list` is mutable)
         self.w = w
-        self.n = len(w) + redundancy
+        self.n = len(w) + int(alg_params['redundancy'])
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
+        self.zero_rll = self.log_n + int(alg_params['rll_extra'])
         return self
 
     def encode(self, _debug_no_append=False):
-        self.w.insert(0, 0)
+        if int(alg_params['redundancy']) == 2:
+            self.w.insert(0, 0)
         if not _debug_no_append:
             self.w.append(1)
-            for i in range(self.log_n + 1):
+            for i in range(self.zero_rll):
                 self.w.append(0)
         print('w0     =', self.w)
 
@@ -86,13 +91,13 @@ class Encoder1:
                 for curr_index in range(len(self.w) - 1):
                     if self.w[curr_index] == 0:
                         curr_length += 1
-                        if curr_length == self.log_n + 1:
-                            zero_window_index = curr_index - self.log_n
+                        if curr_length == self.zero_rll:
+                            zero_window_index = curr_index - self.zero_rll + 1
                             break
                     elif self.w[curr_index] == 1:
                         curr_length = 0
                 if zero_window_index >= 0:
-                    self.w[zero_window_index:zero_window_index + self.log_n + 1] = []
+                    self.w[zero_window_index:zero_window_index + self.zero_rll] = []
 
                     # One-by-one appending in O(len(appended))
                     prepended = [1] + b(zero_window_index, self.log_n)
