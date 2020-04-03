@@ -1,5 +1,7 @@
 # Repeat-Free Sequences
 
+This needs updating.
+
 ## Data Structures
 ### Double-Ended Queue (deque)
 To hold the order in which the windows are checked.

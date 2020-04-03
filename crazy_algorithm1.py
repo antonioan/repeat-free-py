@@ -1,8 +1,8 @@
 from math import log, ceil
-from typing import Optional, List, NewType, Tuple, Any, Union, Dict
-from autoinc_queue import AutoIncQueue
-from avl_rank import AvlRankTree as DeltaTree, AvlRankTree as AvlTree
-from hashtable import ChainedHashtable as Hashtable, LinkedList, Link
+from typing import Optional, List, NewType, Tuple, Dict
+from data_structures.autoinc_queue import AutoIncQueue
+from data_structures.avl_rank import AvlRankTree as DeltaTree
+from data_structures.hashtable import ChainedHashtable as Hashtable, LinkedList, Link
 
 # Using a dictionary to parse input, because all relevant complexity times are O(1):
 # https://www.ics.uci.edu/~brgallar/week8_2.html

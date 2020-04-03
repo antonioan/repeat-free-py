@@ -2,8 +2,8 @@
 
 import abc
 import math
-from typing import List, Optional, Callable
-from linked_list import *
+from typing import List, Callable
+from data_structures.linked_list import *
 
 
 class Hash:

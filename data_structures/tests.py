@@ -1,5 +1,5 @@
-from fenwick import FenwickTree
-from avl_rank import AvlRankTree
+from data_structures.fenwick import FenwickTree
+from data_structures.avl_rank import AvlRankTree
 # from crazy_algorithm1 import *
 
 # region Unit Tests
