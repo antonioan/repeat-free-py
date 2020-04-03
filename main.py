@@ -7,8 +7,9 @@ from utils import b
 
 
 def run_test(w: List):
-    assert(len(w) == n - 1)
+    assert(len(w) == n - redundancy)
     log_n = ceil(log(n, 2))
+    orig_w = w.copy()
     print('n      =', n)
     print('log_n  =', log_n)
     print('k      =', 2 * log_n + 2)
@@ -17,61 +18,36 @@ def run_test(w: List):
     print('output =', codeword)
     decodeword = Decoder1().input(codeword).decode().output()
     print('decode =', decodeword)
-    if codeword == decodeword:
+    if orig_w == decodeword:
         print('EQUAL')
         return True
     return False
 
 
 def run_main():
-    len_source = number_of_tests + n - 2
+    len_source = number_of_tests + n - 1 - redundancy
     ones_in_source = int(len_source * average_percent_of_ones)
     arr = np.array([1] * ones_in_source + [0] * (len_source - ones_in_source))
     np.random.shuffle(arr)
     source = list(arr)
+    number_of_successes = 0
     for i in range(number_of_tests):
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
-            run_test(source[i:i + (n - 1)])
+            res = run_test(source[i:i + (n - redundancy)])
         out = f.getvalue()
         if i & 0b1111111 == 0:  # Print every 128-th output
             print(out)
-
-        # # Comment out the following to find a counterexample for the injectivity of the Encoder
-        # if source[i] == 0 and out.split('\n', 6)[5][1] == '2':
-        #     print('Counterexample is possible.')
-        #     print(out)
-        # else:
-        #     print(i)
+        number_of_successes += res
+    print("Succeeded {} times out of {} ({}%)".format(number_of_successes, number_of_tests,
+                                                      100. * number_of_successes / number_of_tests))
 
 
 # TEST PARAMETERS
-n = 2 ** 8                      # Remember: Input is of length (n - 1) (good choice: 2 ** 8)
-number_of_tests = 2 ** 5        # Two consecutive tests u, v satisfy u[1:] == v[:-1] (good choice: 2 ** 9)
-average_percent_of_ones = 0.30   # As this gets closer to 0.5, less iterations are needed (good choice: 0.1)
+n = 2 ** 8                      # Remember: Input is of length (n - redundancy) (good choice: 2 ** 8)
+number_of_tests = 2 ** 9        # Two consecutive tests u, v satisfy u[1:] == v[:-1] (good choice: 2 ** 9)
+average_percent_of_ones = 0.1   # As this gets closer to 0.5, less iterations are needed (good choice: 0.1)
 if __name__ == '__main__':
-    # # Counterexample for injectivity of Encoder
-    # run_test([0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0])
-    # run_test([1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0])
-
-    # # Longer counterexample
-    # run_test([1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 1, 0, 0, 1,
-    #           1, 1, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0,
-    #           0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 1, 1,
-    #           0, 0, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0,
-    #           0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
-    #           1, 1, 1, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0,
-    #           0, 1, 1, 0, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0,
-    #           1, 1, 1, 0, 0, 0, 0, 0, 0, 1])
-    # run_test([1, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 0,
-    #           1, 0, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0,
-    #           0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
-    #           0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 0,
-    #           0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0,
-    #           0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0,
-    #           0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 1,
-    #           0, 1, 0, 0, 0, 0, 1, 0, 0, 0])
-
     run_main()
 
 # region Anecdotes

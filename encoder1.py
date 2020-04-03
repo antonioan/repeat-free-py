@@ -25,6 +25,8 @@ x 2. q-ary support                                <- Between easy and important
 
 """
 
+redundancy: int = 2
+
 
 class Encoder1:
     # region Parameters
@@ -43,12 +45,13 @@ class Encoder1:
     def input(self, w: List):
         # Tested: `self.w = w` happens by reference (since `list` is mutable)
         self.w = w
-        self.n = len(w) + 1
+        self.n = len(w) + redundancy
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
         return self
 
     def encode(self, _debug_no_append=False):
+        self.w.insert(0, 0)
         if not _debug_no_append:
             self.w.append(1)
             for i in range(self.log_n + 1):

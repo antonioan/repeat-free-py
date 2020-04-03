@@ -123,4 +123,4 @@ class Decoder1:
         self.end_index += self.log_n + 1
 
     def output(self):
-        return self.w[self.start_index:self.end_index]
+        return self.w[self.start_index + 1:self.end_index]
