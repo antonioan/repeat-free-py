@@ -1,6 +1,6 @@
 from math import log, ceil
 from utils import *
-from encoder1 import alg_params
+from encoder import alg_params
 
 """
 
@@ -28,7 +28,7 @@ This file implements option 2.
 """
 
 
-class Decoder1:
+class Decoder:
     # region Parameters
     w:              List[int]
     n:              int
@@ -38,6 +38,7 @@ class Decoder1:
     start_index:    int
     end_index:      int
     zero_rll:       int
+    redundancy:     int
     # endregion
 
     def __init__(self, q: int = 2):
@@ -47,6 +48,7 @@ class Decoder1:
 
     def input(self, w: List):
         self.w = w
+        self.redundancy = int(alg_params['redundancy'])
         self.n = len(w)
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2

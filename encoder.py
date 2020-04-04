@@ -12,8 +12,8 @@ TOTAL: n^3 * (log_n)^2  [ OR?  n^2 * (log_n)^3 ] <-- The latter case does not se
 
 TIME                       SPACE
 -----                      -----
-  n^3 * (log_n)^2    |       log_n          # this file
-  n^2 * log_n        |       n * log_n      # must be similar to crazy_algorithm.py, but forgot
+  n^3 * (log_n)^2    |       log_n          # implemented as Encoder.eliminate1()
+  n^2 * log_n        |       n * log_n      # implemented as Encoder.eliminate2()
   n   * (log_n)^2    |       n^2            # see crazy_algorithm1.py (the queue has issues, though...)
 
 
@@ -28,7 +28,7 @@ x 2. q-ary support                                <- Between easy and important
 alg_params = {'redundancy': 1, 'rll_extra': 2}
 
 
-class Encoder1:
+class Encoder:
     # region Parameters
     w:              List[int]
     n:              int
@@ -36,32 +36,37 @@ class Encoder1:
     log_n:          int
     k:              int
     zero_rll:       int
+    type:           int
+    redundancy:     int
     # endregion
 
-    def __init__(self, q: int = 2):
+    def __init__(self, alg_type: int, q: int = 2):
         if q != 2:
             raise NotImplementedError()
         assert 1 <= int(alg_params['redundancy']) <= 2
         assert 1 <= int(alg_params['rll_extra']) <= 2
+        assert 1 <= alg_type <= 2
         self.q = q
+        self.type = alg_type
 
     def input(self, w: List):
         # Tested: `self.w = w` happens by reference (since `list` is mutable)
         self.w = w
-        self.n = len(w) + int(alg_params['redundancy'])
+        self.redundancy = int(alg_params['redundancy'])
+        self.n = len(w) + self.redundancy
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
         self.zero_rll = self.log_n + int(alg_params['rll_extra'])
         return self
 
     def encode(self, _debug_no_append=False):
-        if int(alg_params['redundancy']) == 2:
+        if self.redundancy == 2:
             self.w.insert(0, 0)
         if not _debug_no_append:
             self.w.append(1)
             for i in range(self.zero_rll):
                 self.w.append(0)
-        print('w0     =', self.w)
+        # print('w0     =', self.w)
 
         # Run algorithm
         return self.eliminate().expand()
@@ -70,21 +75,43 @@ class Encoder1:
         found_identical_or_zero = True
         while found_identical_or_zero:
             found_identical_or_zero = False
-            for i in range(len(self.w) - self.k):
-                break_out = False
-                for j in range(i + 1, len(self.w) - self.k + 1):
-                    if self.w[i:i + self.k] != self.w[j:j + self.k]:  # not self.identical(i, j):
-                        continue
+
+            if self.type == 1:  # O(n^3 * log_n)
+                for i in range(len(self.w) - self.k):
+                    break_out = False
+                    for j in range(i + 1, len(self.w) - self.k + 1):
+                        if self.w[i:i + self.k] != self.w[j:j + self.k]:  # not self.identical(i, j):
+                            continue
+                        found_identical_or_zero = True
+                        self.w[i:i + self.k] = []
+                        self.w[:0] = [0] + b(i, self.log_n) + b(j, self.log_n)
+                        # print('w1     =', self.w)
+
+                        break_out = True
+                        break
+                    if break_out:
+                        break
+            elif self.type == 2:  # O(n^2 * log^2_n)
+                seen_windows = {}
+                piw_i = -1  # piw: primal identical windows
+                piw_j = -1
+                for j in range(len(self.w) - self.k + 1):
+                    hw_j = hash_window(self.w[j:j + self.k])
+                    # change i, j if found a better pair.
+                    # notice that < is necessary because if i < j < k are identical windows we want (i,j)
+                    if hw_j in seen_windows.keys():
+                        if piw_i == -1 or (seen_windows[hw_j] < piw_i):
+                            piw_i = seen_windows[hw_j]  # already seen so this window is the first of the couple
+                            piw_j = j
+                    else:
+                        seen_windows[hw_j] = j
+                if piw_i >= 0:
+                    i, j = piw_i, piw_j
                     found_identical_or_zero = True
-                    self.w[i:i+self.k] = []
-                    prepended = [0] + b(i, self.log_n) + b(j, self.log_n)
-                    for p in reversed(prepended):
-                        self.w.insert(0, int(p))
-                    break_out = True
-                    print('w1     =', self.w)
-                    break
-                if break_out:
-                    break
+                    self.w[i:i + self.k] = []
+                    self.w[:0] = [0] + b(i, self.log_n) + b(j, self.log_n)
+                    # print('w1     =', self.w)
+
             if not found_identical_or_zero:
                 zero_window_index = -1
                 curr_length = 0
@@ -104,7 +131,7 @@ class Encoder1:
                     for p in reversed(prepended):
                         self.w.insert(0, int(p))
                     found_identical_or_zero = True
-                    print('w2     =', self.w)
+                    # print('w2     =', self.w)
         return self
 
     def expand(self):
@@ -144,7 +171,7 @@ class Encoder1:
             if good_u is None:
                 raise Exception("B contains all words of length log_n.")
             self.w.extend(good_u)
-            print('w+     =', self.w)
+            # print('w+     =', self.w)
         return self
 
     def output(self):

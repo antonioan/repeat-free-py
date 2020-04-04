@@ -1,6 +1,10 @@
 from typing import NewType, Tuple, List, Optional
 
 
+def hash_window(window):
+    return "".join([str(n) for n in window])
+
+
 # will probably be used with n := log_n
 def cr(n, w):
     out = w
@@ -10,7 +14,7 @@ def cr(n, w):
 
 
 def b(n, width: int = 0):
-    return list(format(n, 'b').zfill(width))
+    return [int(p) for p in format(n, 'b').zfill(width)]
 
 
 def b_rev(n_list: List):
@@ -18,6 +22,7 @@ def b_rev(n_list: List):
     for digits in n_list:
         result = (result << 1) | digits
     return result
+
 
 # Time complexity: O(log(n, base=q))
 # Place complexity: O(log_q) * O(log(n, base=q))
