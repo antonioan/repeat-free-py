@@ -25,7 +25,8 @@ x 2. q-ary support                                <- Between easy and important
 
 """
 
-alg_params = {'redundancy': 1, 'rll_extra': 2}
+
+# alg_params = {'redundancy': 1, 'rll_extra': 2}
 
 
 class Encoder:
@@ -41,24 +42,25 @@ class Encoder:
 
     # endregion
 
-    def __init__(self, alg_type: int, verbose_mode: bool, q: int = 2):
+    def __init__(self, alg_type: int, verbose_mode: bool, alg_params, q: int = 2):
         if q != 2:
             raise NotImplementedError()
         assert 1 <= int(alg_params['redundancy']) <= 2
         assert 1 <= int(alg_params['rll_extra']) <= 2
-        assert 1 <= alg_type <= 2
+        assert alg_type in ["time", "space"]
         self.q = q
-        self.type = alg_type
+        self.type = 1 if alg_type == "time" else 2
         self.verbose = verbose_mode
+        self.alg_params = alg_params
 
     def input(self, w: List):
         # Tested: `self.w = w` happens by reference (since `list` is mutable)
         self.w = w
-        self.redundancy = int(alg_params['redundancy'])
+        self.redundancy = int(self.alg_params['redundancy'])
         self.n = len(w) + self.redundancy
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
-        self.zero_rll = self.log_n + int(alg_params['rll_extra'])
+        self.zero_rll = self.log_n + int(self.alg_params['rll_extra'])
         return self
 
     def encode(self, _debug_no_append=False):

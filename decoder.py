@@ -1,6 +1,7 @@
 from math import log, ceil
 from utils import *
-from encoder import alg_params
+
+# from encoder import alg_params
 
 """
 
@@ -30,29 +31,32 @@ This file implements option 2.
 
 class Decoder:
     # region Parameters
-    w:              List[int]
-    n:              int
-    q:              int
-    log_n:          int
-    k:              int
-    start_index:    int
-    end_index:      int
-    zero_rll:       int
-    redundancy:     int
+    w: List[int]
+    n: int
+    q: int
+    log_n: int
+    k: int
+    start_index: int
+    end_index: int
+    zero_rll: int
+    redundancy: int
+
     # endregion
 
-    def __init__(self, q: int = 2):
+    def __init__(self, alg_params, verbose_mode, q: int = 2):
         if q != 2:
             raise NotImplementedError()
         self.q = q
+        self.alg_params = alg_params
+        self.verbose = verbose_mode
 
     def input(self, w: List):
         self.w = w
-        self.redundancy = int(alg_params['redundancy'])
+        self.redundancy = int(self.alg_params['redundancy'])
         self.n = len(w)
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
-        self.zero_rll = self.log_n + int(alg_params['rll_extra'])
+        self.zero_rll = self.log_n + int(self.alg_params['rll_extra'])
         self.start_index = 0
         self.end_index = self.n
         return self
@@ -83,7 +87,8 @@ class Decoder:
         # At this point, w[:self.end_index] is w' from the decoder description above
         # The relevant part of w is maintained to be w[self.start_index:self.end_index]
         # Note: The right-side limit (self.end_index) is exclusive
-        print('w-0    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
+        if self.verbose:
+            print('w-0    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
         # print('wstart =', self.start_index)
         # print('wend   =', self.end_index)
         while (self.end_index - self.start_index) < (self.n - 1):
@@ -91,17 +96,21 @@ class Decoder:
             self.start_index += 1
             if phase == 0:
                 self.undo_phase1()
-                print('w-1    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
+                if self.verbose:
+                    print('w-1    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
             else:  # elif phase == 1:
                 self.undo_phase2()
-                print('w-2    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
-        print('dec*   =', self.w[self.start_index:self.end_index])
-        if int(alg_params['redundancy']) == 2:
+                if self.verbose:
+                    print('w-2    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
+        if self.verbose:
+            print('dec*   =', self.w[self.start_index:self.end_index])
+        if int(self.alg_params['redundancy']) == 2:
             while self.w[self.start_index] == 1:
                 # Are we done yet?
                 self.start_index += 1
                 self.undo_phase2()
-                print('w-2*   =', self.w[self.start_index:self.end_index])
+                if self.verbose:
+                    print('w-2*   =', self.w[self.start_index:self.end_index])
         assert (self.end_index - self.start_index) == (self.n - 1)
         return self
 
@@ -129,4 +138,4 @@ class Decoder:
         self.end_index += self.zero_rll
 
     def output(self):
-        return self.w[self.start_index + int(alg_params['redundancy']) - 1:self.end_index]
+        return self.w[self.start_index + int(self.alg_params['redundancy']) - 1:self.end_index]

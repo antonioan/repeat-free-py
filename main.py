@@ -19,8 +19,7 @@ def validate_no_identical_windows(w, k):
 
 
 def run_test(w: List, action, redundancy, complexity_mode, verbose_mode, test_mode):
-    alg_params['redundancy'] = 1
-    alg_params['rll_extra'] = 2
+    alg_params = {'redundancy': redundancy, 'rll_extra': 2 - redundancy}
     n = len(w) + int(alg_params['redundancy'])
     if test_mode:
         assert (len(w) == n - int(alg_params['redundancy']))
@@ -33,19 +32,28 @@ def run_test(w: List, action, redundancy, complexity_mode, verbose_mode, test_mo
         print('k      =', k)
         print('w      =', w)
 
-    res_word = Encoder(complexity_mode, verbose_mode).input(
-        w).encode().output() if action == "encode" else Decoder().input(
+    res_word = Encoder(complexity_mode, verbose_mode, alg_params).input(
+        w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode).input(
         w).decode().output()
 
     print('output =', res_word)
 
-    if test_mode and action == "encode":
-        if validate_no_identical_windows(res_word, k):
-            print('TEST SUCCESS')
-            return True
-        else:
-            print('TEST FAILED')
-            return False
+    if test_mode:
+        if action == "encode":
+            if validate_no_identical_windows(res_word, k):
+                print('TEST SUCCESS')
+                return True
+            else:
+                print('TEST FAILED!')
+                print('result is not repeat free')
+                return False
+        elif action == "decode":
+            if orig_w == Encoder(complexity_mode, False, alg_params).input(w).encode().output():
+                print('TEST SUCCESS')
+                return True
+            else:
+                print('TEST FAILED!')
+                print('Encode(Decode(w)) != w')
     return True
 
 
@@ -82,7 +90,7 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--test", help="test for output correctness", action="store_true")
     args = parser.parse_args()
 
-    run_test(list(args.sequence), args.action, args.redundancy, args.complexity, args.verbose, args.test)
+    run_test([int(x) for x in list(args.sequence)], args.action, args.redundancy, args.complexity, args.verbose, args.test)
 
 # region Anecdotes
 
