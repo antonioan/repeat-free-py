@@ -98,7 +98,8 @@ if __name__ == '__main__':
         if args.input:  # get word from standard input
             args.sequence = input()
         else:
-            raise Exception("You must enter a word either from the command line or via standard input")
+            print("You must enter a word either from the command line or via standard input", file=sys.stderr)
+            exit()
 
     run_test([int(x) for x in list(args.sequence)], args.action, args.redundancy, args.complexity, args.verbose,
              args.test)
