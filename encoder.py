@@ -49,7 +49,7 @@ class Encoder:
         assert 1 <= int(alg_params['rll_extra']) <= 2
         assert alg_type in ["time", "space"]
         self.q = q
-        self.type = 1 if alg_type == "time" else 2
+        self.type = 1 if alg_type == "space" else 2  # 1 saves space but costs more time
         self.verbose = verbose_mode
         self.alg_params = alg_params
 

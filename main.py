@@ -1,6 +1,9 @@
 import argparse
 import contextlib
+import fileinput
 import io
+import sys
+
 import numpy as np
 from encoder import *
 from decoder import *
@@ -36,7 +39,7 @@ def run_test(w: List, action, redundancy, complexity_mode, verbose_mode, test_mo
         w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode).input(
         w).decode().output()
 
-    print('output =', res_word)
+    print('output =', "".join([str(x) for x in res_word]))
 
     if test_mode:
         if action == "encode":
@@ -81,7 +84,8 @@ def run_test(w: List, action, redundancy, complexity_mode, verbose_mode, test_mo
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("./main")
     parser.add_argument("action", help="{encode, decode}")
-    parser.add_argument("sequence", help="a binary word")
+    parser.add_argument("-i", "--input", help="get word from standard input", action="store_true")
+    parser.add_argument("sequence", nargs="?", help="a binary word")
     parser.add_argument("-r", "--redundancy", type=int, choices=[1, 2],
                         help="how many redundancy bits to use", default=1)
     parser.add_argument("-c", "--complexity", choices=["time", "space"],
@@ -90,7 +94,14 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--test", help="test for output correctness", action="store_true")
     args = parser.parse_args()
 
-    run_test([int(x) for x in list(args.sequence)], args.action, args.redundancy, args.complexity, args.verbose, args.test)
+    if args.sequence is None:
+        if args.input:  # get word from standard input
+            args.sequence = input()
+        else:
+            raise Exception("You must enter a word either from the command line or via standard input")
+
+    run_test([int(x) for x in list(args.sequence)], args.action, args.redundancy, args.complexity, args.verbose,
+             args.test)
 
 # region Anecdotes
 
