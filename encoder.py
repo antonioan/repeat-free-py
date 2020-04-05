@@ -30,17 +30,18 @@ alg_params = {'redundancy': 1, 'rll_extra': 2}
 
 class Encoder:
     # region Parameters
-    w:              List[int]
-    n:              int
-    q:              int
-    log_n:          int
-    k:              int
-    zero_rll:       int
-    type:           int
-    redundancy:     int
+    w: List[int]
+    n: int
+    q: int
+    log_n: int
+    k: int
+    zero_rll: int
+    type: int
+    redundancy: int
+
     # endregion
 
-    def __init__(self, alg_type: int, q: int = 2):
+    def __init__(self, alg_type: int, verbose_mode: bool, q: int = 2):
         if q != 2:
             raise NotImplementedError()
         assert 1 <= int(alg_params['redundancy']) <= 2
@@ -48,6 +49,7 @@ class Encoder:
         assert 1 <= alg_type <= 2
         self.q = q
         self.type = alg_type
+        self.verbose = verbose_mode
 
     def input(self, w: List):
         # Tested: `self.w = w` happens by reference (since `list` is mutable)
@@ -66,7 +68,8 @@ class Encoder:
             self.w.append(1)
             for i in range(self.zero_rll):
                 self.w.append(0)
-        # print('w0     =', self.w)
+        if self.verbose:
+            print('w0     =', self.w)
 
         # Run algorithm
         return self.eliminate().expand()
@@ -85,7 +88,8 @@ class Encoder:
                         found_identical_or_zero = True
                         self.w[i:i + self.k] = []
                         self.w[:0] = [0] + b(i, self.log_n) + b(j, self.log_n)
-                        # print('w1     =', self.w)
+                        if self.verbose:
+                            print('w1     =', self.w)
 
                         break_out = True
                         break
@@ -110,7 +114,8 @@ class Encoder:
                     found_identical_or_zero = True
                     self.w[i:i + self.k] = []
                     self.w[:0] = [0] + b(i, self.log_n) + b(j, self.log_n)
-                    # print('w1     =', self.w)
+                    if self.verbose:
+                        print('w1     =', self.w)
 
             if not found_identical_or_zero:
                 zero_window_index = -1
@@ -131,7 +136,8 @@ class Encoder:
                     for p in reversed(prepended):
                         self.w.insert(0, int(p))
                     found_identical_or_zero = True
-                    # print('w2     =', self.w)
+                    if self.verbose:
+                        print('w2     =', self.w)
         return self
 
     def expand(self):
@@ -143,7 +149,7 @@ class Encoder:
             # Space: O(log_n) additional space.
 
             # FIXME: The following is a shortcut for the binary case
-            assert(self.q == 2)
+            assert (self.q == 2)
 
             # u is a binary word of length log_n
             good_u: Optional[List] = None
@@ -171,7 +177,8 @@ class Encoder:
             if good_u is None:
                 raise Exception("B contains all words of length log_n.")
             self.w.extend(good_u)
-            # print('w+     =', self.w)
+            if self.verbose:
+                print('w+     =', self.w)
         return self
 
     def output(self):

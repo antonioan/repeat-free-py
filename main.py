@@ -1,3 +1,4 @@
+import argparse
 import contextlib
 import io
 import numpy as np
@@ -17,64 +18,71 @@ def validate_no_identical_windows(w, k):
     return True
 
 
-def run_test(w: List):
-    assert(len(w) == n - int(alg_params['redundancy']))
+def run_test(w: List, action, redundancy, complexity_mode, verbose_mode, test_mode):
+    alg_params['redundancy'] = 1
+    alg_params['rll_extra'] = 2
+    n = len(w) + int(alg_params['redundancy'])
+    if test_mode:
+        assert (len(w) == n - int(alg_params['redundancy']))
     orig_w = w.copy()
     log_n = ceil(log(n, 2))
     k = 2 * log_n + 2
-    print('n      =', n)
-    print('log_n  =', log_n)
-    print('k      =', k)
-    print('w      =', w)
-    codeword1 = Encoder(1).input(w).encode().output()
-    print('output1 =', codeword1)
-    w = orig_w.copy()
-    codeword2 = Encoder(2).input(w).encode().output()
-    print('output2 =', codeword2)
-    if codeword1 != codeword2:
-        return False
-    decodeword = Decoder().input(codeword1).decode().output()
-    print('decode =', decodeword)
-    print('orig_w =', orig_w)
-    if orig_w != decodeword:
-        return False
-    if validate_no_identical_windows(codeword2, k):
-        print('SUCCESS')
-        return True
-    return False
+    if verbose_mode:
+        print('n      =', n)
+        print('log_n  =', log_n)
+        print('k      =', k)
+        print('w      =', w)
+
+    res_word = Encoder(complexity_mode, verbose_mode).input(
+        w).encode().output() if action == "encode" else Decoder().input(
+        w).decode().output()
+
+    print('output =', res_word)
+
+    if test_mode and action == "encode":
+        if validate_no_identical_windows(res_word, k):
+            print('TEST SUCCESS')
+            return True
+        else:
+            print('TEST FAILED')
+            return False
+    return True
 
 
-def run_main(print_output=False):
-    len_source = number_of_tests + n - 1 - int(alg_params['redundancy'])
-    ones_in_source = int(len_source * average_percent_of_ones)
-    arr = np.array([1] * ones_in_source + [0] * (len_source - ones_in_source))
-    np.random.shuffle(arr)
-    source = list(arr)
-    number_of_successes = 0
-    for i in range(number_of_tests):
-        f = io.StringIO()
-        with contextlib.redirect_stdout(f):
-            res = run_test(source[i:i + (n - int(alg_params['redundancy']))])
-        out = f.getvalue()
-        if print_output and i & 0b1111111 == 0:  # Print every 128-th output
-            print(out)
-        number_of_successes += res
-    print('r      =', int(alg_params['redundancy']))
-    print('rll+   =', int(alg_params['rll_extra']))
-    print("Succeeded {} times out of {} ({}%)".format(number_of_successes, number_of_tests,
-                                                      100. * number_of_successes / number_of_tests))
+# def run_main(print_output=False):
+#     len_source = number_of_tests + n - 1 - int(alg_params['redundancy'])
+#     ones_in_source = int(len_source * average_percent_of_ones)
+#     arr = np.array([1] * ones_in_source + [0] * (len_source - ones_in_source))
+#     np.random.shuffle(arr)
+#     source = list(arr)
+#     number_of_successes = 0
+#     for i in range(number_of_tests):
+#         f = io.StringIO()
+#         with contextlib.redirect_stdout(f):
+#             res = run_test(source[i:i + (n - int(alg_params['redundancy']))])
+#         out = f.getvalue()
+#         if print_output and i & 0b1111111 == 0:  # Print every 128-th output
+#             print(out)
+#         number_of_successes += res
+#     print('r      =', int(alg_params['redundancy']))
+#     print('rll+   =', int(alg_params['rll_extra']))
+#     print("Succeeded {} times out of {} ({}%)".format(number_of_successes, number_of_tests,
+#                                                       100. * number_of_successes / number_of_tests))
 
 
-# TEST PARAMETERS
-n = 2 ** 7                      # Remember: Input is of length (n - redundancy) (good choice: 2 ** 8)
-number_of_tests = 2 ** 6        # Two consecutive tests u, v satisfy u[1:] == v[:-1] (good choice: 2 ** 9)
-average_percent_of_ones = 0.35  # As this gets closer to 0.5, less iterations are needed (good choice: 0.1)
-do_print_output = False         # Print full Algorithm output on first test and every 128th
 if __name__ == '__main__':
-    alg_params['redundancy'] = 1; alg_params['rll_extra'] = 2; run_main(do_print_output)
-    alg_params['redundancy'] = 2; alg_params['rll_extra'] = 1; run_main(do_print_output)
-    alg_params['redundancy'] = 2; alg_params['rll_extra'] = 2; run_main(do_print_output)
-    alg_params['redundancy'] = 1; alg_params['rll_extra'] = 1; run_main(do_print_output)
+    parser = argparse.ArgumentParser("./main")
+    parser.add_argument("action", help="{encode, decode}")
+    parser.add_argument("sequence", help="a binary word")
+    parser.add_argument("-r", "--redundancy", type=int, choices=[1, 2],
+                        help="how many redundancy bits to use", default=1)
+    parser.add_argument("-c", "--complexity", choices=["time", "space"],
+                        help="save time or space complexity", default="time")
+    parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
+    parser.add_argument("-t", "--test", help="test for output correctness", action="store_true")
+    args = parser.parse_args()
+
+    run_test(list(args.sequence), args.action, args.redundancy, args.complexity, args.verbose, args.test)
 
 # region Anecdotes
 
