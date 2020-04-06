@@ -3,7 +3,7 @@
 import abc
 import math
 from typing import List, Callable
-from data_structures.linked_list import *
+from rip.linked_list import *
 
 
 class Hash:

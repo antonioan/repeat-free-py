@@ -21,7 +21,7 @@ def validate_no_identical_windows(w, k):
     return True
 
 
-def run_test(w: List, action, redundancy, complexity_mode, verbose_mode, test_mode):
+def do_action(w: List, action, redundancy, complexity_mode, verbose_mode, test_mode):
     alg_params = {'redundancy': redundancy, 'rll_extra': 3 - redundancy}
     n = len(w) + int(alg_params['redundancy']) if action == "encode" else len(w)
     if test_mode:
@@ -44,41 +44,26 @@ def run_test(w: List, action, redundancy, complexity_mode, verbose_mode, test_mo
     if test_mode:
         if action == "encode":
             if validate_no_identical_windows(res_word, k):
-                print('TEST SUCCESS')
-                return True
+                if orig_w == Decoder(alg_params, verbose_mode).input(res_word).decode().output():
+                    print('TEST SUCCESS')
+                    return True
+                else:
+                    print('TEST FAILED!')
+                    print('Decode(Encode(w)) != w')
+                    return False
             else:
                 print('TEST FAILED!')
                 print('result is not repeat free')
                 return False
         elif action == "decode":
-            if orig_w == Encoder(complexity_mode, False, alg_params).input(w).encode().output():
+            if orig_w == Encoder(complexity_mode, verbose_mode, alg_params).input(res_word).encode().output():
                 print('TEST SUCCESS')
                 return True
             else:
                 print('TEST FAILED!')
                 print('Encode(Decode(w)) != w')
+                return False
     return True
-
-
-# def run_main(print_output=False):
-#     len_source = number_of_tests + n - 1 - int(alg_params['redundancy'])
-#     ones_in_source = int(len_source * average_percent_of_ones)
-#     arr = np.array([1] * ones_in_source + [0] * (len_source - ones_in_source))
-#     np.random.shuffle(arr)
-#     source = list(arr)
-#     number_of_successes = 0
-#     for i in range(number_of_tests):
-#         f = io.StringIO()
-#         with contextlib.redirect_stdout(f):
-#             res = run_test(source[i:i + (n - int(alg_params['redundancy']))])
-#         out = f.getvalue()
-#         if print_output and i & 0b1111111 == 0:  # Print every 128-th output
-#             print(out)
-#         number_of_successes += res
-#     print('r      =', int(alg_params['redundancy']))
-#     print('rll+   =', int(alg_params['rll_extra']))
-#     print("Succeeded {} times out of {} ({}%)".format(number_of_successes, number_of_tests,
-#                                                       100. * number_of_successes / number_of_tests))
 
 
 if __name__ == '__main__':
@@ -101,8 +86,8 @@ if __name__ == '__main__':
             print("You must enter a word either from the command line or via standard input", file=sys.stderr)
             exit()
 
-    run_test([int(x) for x in list(args.sequence)], args.action, args.redundancy, args.complexity, args.verbose,
-             args.test)
+    do_action([int(x) for x in list(args.sequence)], args.action, args.redundancy, args.complexity, args.verbose,
+              args.test)
 
 # region Anecdotes
 

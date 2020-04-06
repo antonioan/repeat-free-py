@@ -17,5 +17,3 @@ with open('profiler.out.txt','w') as f:
         p = pstats.Stats('profiler/profiler.out')
         p.sort_stats('cumulative').print_stats(30)
 ```
-
-*(Haven't tested what's written here exactly...)*

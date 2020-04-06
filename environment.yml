@@ -1,4 +1,4 @@
-name: cs236781-hw
+name: cs236781-hw # this environment is an overkill for the current project, but if you have 'em all then you're fine
 channels:
   - pytorch
   - defaults
@@ -29,4 +29,3 @@ dependencies:
     - gym
     - atari-py
     - box2d-py
-
