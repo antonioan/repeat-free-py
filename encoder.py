@@ -43,8 +43,6 @@ class Encoder:
     # endregion
 
     def __init__(self, alg_type: int, verbose_mode: bool, alg_params, q: int = 2):
-        if q != 2:
-            raise NotImplementedError()
         assert 1 <= int(alg_params['redundancy']) <= 2
         assert 1 <= int(alg_params['rll_extra']) <= 2
         assert alg_type in ["time", "space"]
@@ -89,7 +87,7 @@ class Encoder:
                             continue
                         found_identical_or_zero = True
                         self.w[i:i + self.k] = []
-                        self.w[:0] = [0] + b(i, self.log_n) + b(j, self.log_n)
+                        self.w[:0] = [0] + q_ary(i, self.q, self.log_n) + q_ary(j, self.q, self.log_n)
                         if self.verbose:
                             print('w1     =', self.w)
 
@@ -102,20 +100,20 @@ class Encoder:
                 piw_i = -1  # piw: primal identical windows
                 piw_j = -1
                 for j in range(len(self.w) - self.k + 1):
-                    hw_j = hash_window(self.w[j:j + self.k])
-                    # change i, j if found a better pair.
+                    hash_j = str(self.w[j:j + self.k])
+                    # change i, j if found a better pair
                     # notice that < is necessary because if i < j < k are identical windows we want (i,j)
-                    if hw_j in seen_windows.keys():
-                        if piw_i == -1 or (seen_windows[hw_j] < piw_i):
-                            piw_i = seen_windows[hw_j]  # already seen so this window is the first of the couple
+                    if hash_j in seen_windows.keys():
+                        if piw_i == -1 or (seen_windows[hash_j] < piw_i):
+                            piw_i = seen_windows[hash_j]  # already seen so this window is the first of the couple
                             piw_j = j
                     else:
-                        seen_windows[hw_j] = j
+                        seen_windows[hash_j] = j
                 if piw_i >= 0:
                     i, j = piw_i, piw_j
                     found_identical_or_zero = True
                     self.w[i:i + self.k] = []
-                    self.w[:0] = [0] + b(i, self.log_n) + b(j, self.log_n)
+                    self.w[:0] = [0] + q_ary(i, self.q, self.log_n) + q_ary(j, self.q, self.log_n)
                     if self.verbose:
                         print('w1     =', self.w)
 
@@ -128,13 +126,13 @@ class Encoder:
                         if curr_length == self.zero_rll:
                             zero_window_index = curr_index - self.zero_rll + 1
                             break
-                    elif self.w[curr_index] == 1:
+                    else:  # elif self.w[curr_index] != 0:
                         curr_length = 0
                 if zero_window_index >= 0:
                     self.w[zero_window_index:zero_window_index + self.zero_rll] = []
 
                     # One-by-one appending in O(len(appended))
-                    prepended = [1] + b(zero_window_index, self.log_n)
+                    prepended = [1] + q_ary(zero_window_index, self.q, self.log_n)
                     for p in reversed(prepended):
                         self.w.insert(0, int(p))
                     found_identical_or_zero = True
@@ -150,30 +148,27 @@ class Encoder:
             # Total: O(n * (n * log_n + log^2_n * log_log_n)) = O(n^2 * log_n) time.
             # Space: O(log_n) additional space.
 
-            # FIXME: The following is a shortcut for the binary case
-            assert (self.q == 2)
-
-            # u is a binary word of length log_n
+            # u is a q_ary word of length log_n
             good_u: Optional[List] = None
             for u in range(self.n):
                 next_u = False
-                bin_u = [int(p) for p in b(u, self.log_n)]
+                list_u = q_ary(u, self.q, self.log_n)
                 for curr in range(len(self.w) - self.log_n + 1):
-                    if bin_u == self.w[curr:curr + self.log_n]:
+                    if list_u == self.w[curr:curr + self.log_n]:
                         next_u = True
                         break
-                    # print('Truly,', self.w[curr:curr + self.log_n], 'does not equal', bin_u)
+                    # print('Truly,', self.w[curr:curr + self.log_n], 'does not equal', list_u)
                 if next_u:
                     continue
                 for i in range(1, self.log_n):
                     cr_i = cr(self.log_n, self.w[-i:])
-                    if bin_u == cr_i:
+                    if list_u == cr_i:
                         next_u = True
                         break
-                    # print('Truly,', cr_i, 'does not equal', bin_u)
+                    # print('Truly,', cr_i, 'does not equal', list_u)
                 if next_u:
                     continue
-                good_u = bin_u
+                good_u = list_u
                 # print("good_u =", good_u)
                 break
             if good_u is None:
@@ -184,5 +179,7 @@ class Encoder:
         return self
 
     def output(self):
-        # O(n) place for the output only
-        return self.w[:self.n]
+        self.w = self.w[:self.n]
+        return self.w
+        # Comment out the above and uncomment below to have O(n) place for the output only
+        # return self.w[:self.n]

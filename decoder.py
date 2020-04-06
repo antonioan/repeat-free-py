@@ -44,8 +44,6 @@ class Decoder:
     # endregion
 
     def __init__(self, alg_params, verbose_mode, q: int = 2):
-        if q != 2:
-            raise NotImplementedError()
         self.q = q
         self.alg_params = alg_params
         self.verbose = verbose_mode
@@ -73,7 +71,7 @@ class Decoder:
                 if curr_length == self.zero_rll:
                     self.end_index = curr_index - self.zero_rll
                     break
-            elif self.w[curr_index] == 1:
+            else:  # if self.w[curr_index] != 0:
                 curr_length = 0
 
         # If not found, make one at the end (this is needed - it might be that some removed windows are among them)
@@ -98,7 +96,7 @@ class Decoder:
                 self.undo_phase1()
                 if self.verbose:
                     print('w-1    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
-            else:  # elif phase == 1:
+            elif phase == 1:
                 self.undo_phase2()
                 if self.verbose:
                     print('w-2    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
@@ -115,9 +113,9 @@ class Decoder:
         return self
 
     def undo_phase1(self):
-        index1 = b_rev(self.w[self.start_index:self.start_index + self.log_n])
+        index1 = q_ary_rev(self.w[self.start_index:self.start_index + self.log_n], self.q)
         self.start_index += self.log_n
-        index2 = b_rev(self.w[self.start_index:self.start_index + self.log_n])
+        index2 = q_ary_rev(self.w[self.start_index:self.start_index + self.log_n], self.q)
         self.start_index += self.log_n
 
         # index2 is the index of the second window, BEFORE removing the first window
@@ -130,7 +128,7 @@ class Decoder:
         self.end_index += self.k
 
     def undo_phase2(self):
-        index = b_rev(self.w[self.start_index:self.start_index + self.log_n])
+        index = q_ary_rev(self.w[self.start_index:self.start_index + self.log_n], self.q)
         self.start_index += self.log_n
 
         # Set slice in list - this takes O(SLICE SIZE + LIST LENGTH) = O(n)

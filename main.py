@@ -13,30 +13,31 @@ from decoder import *
 def validate_no_identical_windows(w, k):
     seen_windows = set()
     for i in range(len(w) - k + 1):
-        hw = hash_window(w[i:i + k])
-        if hw in seen_windows:
+        hash_w = str(w[i:i + k])
+        if hash_w in seen_windows:
             return False
         else:
-            seen_windows.add(hw)
+            seen_windows.add(hash_w)
     return True
 
 
-def do_action(w: List, action, redundancy, complexity_mode, verbose_mode, test_mode):
+def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, test_mode):
     alg_params = {'redundancy': redundancy, 'rll_extra': 3 - redundancy}
     n = len(w) + int(alg_params['redundancy']) if action == "encode" else len(w)
     if test_mode:
         assert (len(w) == n - int(alg_params['redundancy']) if action == "encode" else n)
     orig_w = w.copy()
-    log_n = ceil(log(n, 2))
+    log_n = ceil(log(n, q))
     k = 2 * log_n + 2
     if verbose_mode:
         print('n      =', n)
+        print('q      =', q)
         print('log_n  =', log_n)
         print('k      =', k)
         print('w      =', w)
 
-    res_word = Encoder(complexity_mode, verbose_mode, alg_params).input(
-        w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode).input(
+    res_word = Encoder(complexity_mode, verbose_mode, alg_params, q).input(
+        w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode, q).input(
         w).decode().output()
 
     print('output =', "".join([str(x) for x in res_word]))
@@ -44,7 +45,7 @@ def do_action(w: List, action, redundancy, complexity_mode, verbose_mode, test_m
     if test_mode:
         if action == "encode":
             if validate_no_identical_windows(res_word, k):
-                if orig_w == Decoder(alg_params, verbose_mode).input(res_word).decode().output():
+                if orig_w == Decoder(alg_params, verbose_mode, q).input(res_word).decode().output():
                     print('TEST SUCCESS')
                     return True
                 else:
@@ -56,7 +57,7 @@ def do_action(w: List, action, redundancy, complexity_mode, verbose_mode, test_m
                 print('result is not repeat free')
                 return False
         elif action == "decode":
-            if orig_w == Encoder(complexity_mode, verbose_mode, alg_params).input(res_word).encode().output():
+            if orig_w == Encoder(complexity_mode, verbose_mode, alg_params, q).input(res_word).encode().output():
                 print('TEST SUCCESS')
                 return True
             else:
@@ -86,8 +87,9 @@ if __name__ == '__main__':
             print("You must enter a word either from the command line or via standard input", file=sys.stderr)
             exit()
 
-    do_action([int(x) for x in list(args.sequence)], args.action, args.redundancy, args.complexity, args.verbose,
-              args.test)
+    q = 2  # Temporarily constant
+    run_action([int(x) for x in list(args.sequence)], q, args.action, args.redundancy, args.complexity, args.verbose,
+               args.test)
 
 # region Anecdotes
 
