@@ -22,10 +22,10 @@ def validate_no_identical_windows(w, k):
 
 
 def run_test(w: List, action, redundancy, complexity_mode, verbose_mode, test_mode):
-    alg_params = {'redundancy': redundancy, 'rll_extra': 2 - redundancy}
-    n = len(w) + int(alg_params['redundancy'])
+    alg_params = {'redundancy': redundancy, 'rll_extra': 3 - redundancy}
+    n = len(w) + int(alg_params['redundancy']) if action == "encode" else len(w)
     if test_mode:
-        assert (len(w) == n - int(alg_params['redundancy']))
+        assert (len(w) == n - int(alg_params['redundancy']) if action == "encode" else n)
     orig_w = w.copy()
     log_n = ceil(log(n, 2))
     k = 2 * log_n + 2
