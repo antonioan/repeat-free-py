@@ -49,6 +49,7 @@ class Decoder:
         self.verbose = verbose_mode
 
     def input(self, w: List):
+        #TODO add a check before?
         assert (1 in w)
         self.w = w
         self.redundancy = int(self.alg_params['redundancy'])
