@@ -1,27 +1,44 @@
-<h1 align="center">236608 - Coding and Algorithms for Memories</h1>
-<p align="center"> 
-  Final Project
-</p>
+<h1 align="center">236608 - Coding and Algorithms for Memories - Final Project</h1>
 
-# Repeat-Free Sequences
+# Repeat-free Codes
 
-This needs updating.
+The main goal of this tool is to eliminate identical windows in a given sequence. The input is a length-n q-ary vector
+and the output is a length-(n+1) q-ary vector which has no identical windows, when windows size is 2 * log_q(n) +2.
 
-## Data Structures
-### Double-Ended Queue (deque)
-To hold the order in which the windows are checked.
+## Getting Started
 
-### AVL Tree
-To hold a mapping between the windows and their logical (internal) position.
+The project was developed in Python.
 
-<!--
-### Fenwick Tree
-To hold a mapping between the logical positions and the physical (actual) positions.
--->
+### Prerequisites
 
-### AVL Rank Tree with Deltas
-To hold a mapping between the logical positions and the physical (actual) positions.
+```
+Python 3.6 or higher
+```
+## Running the tests
 
-### Chained Hashtable
+The tool can be operated using the command line as follows:
+```
+usage: ./main [-h] [-i] [-r {1,2}] [-q Q] [-c {time,space}] [-v] [-t] action [sequence]
+```
 
-### Linked List
+### Positional Parameters
+
+action and sequence are must parameters where action is either "encode" or "decode" and sequence is a q-ary word.
+
+```
+./main encode 101010
+./main decode 0,1,0,1
+```
+
+### Optional Flags
+
+There are some optional flags which can affect how the tool works
+* **-h** - show help message.
+* **-i** - when flag is on input will be supplied via the standard input .
+
+```
+Give an example
+```
+
+
+
