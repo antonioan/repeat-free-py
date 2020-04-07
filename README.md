@@ -94,5 +94,10 @@ TEST SUCCESS
 ## Authors
 
 * [**Antonio Abu Nassar**](https://github.com/antonioan)
+* [**Rotem Samuel**](https://github.com/rotemsamuel)
+
+## Mentor
+
+* [Professor **Eitan Yaakobi**](http://www.cs.technion.ac.il/people/yaakobi/)
 
 
