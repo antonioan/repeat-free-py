@@ -40,7 +40,7 @@ def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, te
         w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode, q).input(
         w).decode().output()
 
-    print('output =', "".join([str(x) for x in res_word]))
+    print('output =', res_word)
 
     if test_mode:
         if action == "encode":
