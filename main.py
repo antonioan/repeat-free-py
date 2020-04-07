@@ -21,7 +21,7 @@ def validate_no_identical_windows(w, k):
     return True
 
 
-def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, test_mode):
+def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, test_mode, is_comma):
     alg_params = {'redundancy': redundancy, 'rll_extra': 3 - redundancy}
     n = len(w) + int(alg_params['redundancy']) if action == "encode" else len(w)
     if test_mode:
@@ -40,7 +40,10 @@ def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, te
         w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode, q).input(
         w).decode().output()
 
-    print('output =', res_word)
+    if is_comma:
+        print(str(res_word)[1:-1].replace(" ", ""))
+    else:
+        print("".join(map(str, res_word)))
 
     if test_mode:
         if action == "encode":
@@ -94,11 +97,14 @@ if __name__ == '__main__':
             print("You must use ',' as a delimiter when using q != 2 flag", file=sys.stderr)
             exit(1)
 
-    args.sequence = [int(x) for x in list(args.sequence)] if "," not in args.sequence else args.sequence.replace(" ",
-                                                                                                                 "").split(
-        ",")
+    is_comma = False
+    if "," in args.sequence:
+        is_comma = True
+        args.sequence = args.sequence.replace(" ", "").split(",")
+    args.sequence = [int(x) for x in list(args.sequence)]
+
     run_action(args.sequence, args.q, args.action, args.redundancy, args.complexity, args.verbose,
-               args.test)
+               args.test, is_comma)
 
 # region Anecdotes
 
