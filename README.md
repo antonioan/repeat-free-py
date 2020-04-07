@@ -1,11 +1,11 @@
-<h1 align="center">Final Project - Repeat-free Codes</h1>
+<h1 align="center">Repeat-free Codes - Final Project</h1>
 
 # Project Goals
 
 The main goal of this tool is to eliminate identical windows in a given sequence. The input is a length-n q-ary vector
 and the output is a length-(n+1) q-ary vector which has no identical windows, when windows size is <img src="https://render.githubusercontent.com/render/math?math=2\cdot{\log_qn}{%2B2}"> .
 
-The algorithm is based on Algorithm 1 from the article "Repeat-Free Codes" by O. Elishco, R. Gabrys, M. Medard, and E. Yaakobi (see [pdf](/article.pdf)).
+The algorithm is based on Algorithm 1 from the article ["Repeat-Free Codes"](/article.pdf) by O. Elishco, R. Gabrys, M. Medard, and E.
 
 ## Getting Started
 
