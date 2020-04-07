@@ -49,6 +49,7 @@ class Decoder:
         self.verbose = verbose_mode
 
     def input(self, w: List):
+        assert (1 in w)
         self.w = w
         self.redundancy = int(self.alg_params['redundancy'])
         self.n = len(w)
