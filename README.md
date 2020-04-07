@@ -93,6 +93,6 @@ TEST SUCCESS
 
 ## Authors
 
-* **[Antonio Abu Nassar]**(https://github.com/antonioan)
+* [**Antonio Abu Nassar**](https://github.com/antonioan)
 
 
