@@ -1,6 +1,6 @@
-<h1 align="center">236608 - Coding and Algorithms for Memories - Final Project</h1>
+<h1 align="center">Final Project - Repeat-free Codes</h1>
 
-# Repeat-free Codes
+# Project Goals
 
 The main goal of this tool is to eliminate identical windows in a given sequence. The input is a length-n q-ary vector
 and the output is a length-(n+1) q-ary vector which has no identical windows, when windows size is 2 * log_q(n) +2.
