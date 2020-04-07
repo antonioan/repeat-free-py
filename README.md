@@ -93,6 +93,6 @@ TEST SUCCESS
 
 ## Authors
 
-* **Antonio** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* [**Antonio Abu Nassar**] (https://github.com/antonioan)
 
 
