@@ -1,8 +1,6 @@
 from math import log, ceil
 from utils import *
 
-# from encoder import alg_params
-
 """
 
 Decoder works like this:
@@ -45,11 +43,12 @@ class Decoder:
 
     def __init__(self, alg_params, verbose_mode, q: int = 2):
         self.q = q
+        alg_params['rll_extra'] = 3 - alg_params['redundancy']
         self.alg_params = alg_params
         self.verbose = verbose_mode
 
     def input(self, w: List):
-        #TODO add a check before?
+        # TODO add a check before?
         assert (1 in w)
         self.w = w
         self.redundancy = int(self.alg_params['redundancy'])

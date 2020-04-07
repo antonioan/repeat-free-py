@@ -1,10 +1,5 @@
 import argparse
-import contextlib
-import fileinput
-import io
 import sys
-
-import numpy as np
 from encoder import *
 from decoder import *
 
@@ -21,8 +16,8 @@ def validate_no_identical_windows(w, k):
     return True
 
 
-def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, test_mode, is_comma):
-    alg_params = {'redundancy': redundancy, 'rll_extra': 3 - redundancy}
+def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, test_mode, comma_mode):
+    alg_params = {'redundancy': redundancy}
     n = len(w) + int(alg_params['redundancy']) if action == "encode" else len(w)
     if test_mode:
         assert (len(w) == n - int(alg_params['redundancy']) if action == "encode" else n)
@@ -36,13 +31,13 @@ def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, te
         print('k      =', k)
         print('w      =', w)
 
-    res_word = Encoder(complexity_mode, verbose_mode, alg_params, q).input(
+    res_word = Encoder(complexity_mode, alg_params, verbose_mode, q).input(
         w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode, q).input(
         w).decode().output()
 
     if verbose_mode:
         print("output = ", end="")
-    if is_comma:
+    if comma_mode:
         print(str(res_word)[1:-1].replace(" ", ""))
     else:
         print("".join(map(str, res_word)))
