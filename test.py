@@ -20,6 +20,10 @@ def run_tests(number_of_tests, n, digit_distribution, redundancy, complexity, ve
         raise Exception("Digit distribution must have non-negative values for all digits, "
                         "with the possibility of one usage of '-1' (meaning 'the rest')")
 
+    if sum(digit_distribution) != 1:
+        raise Exception("Sum of digit distribution must be 1. Hint: "
+                        "Use '-1' for one of the digits to mean 'the rest'.")
+
     raw_arr = []
     for i in range(1, q):
         raw_arr += [i] * int(len_source * digit_distribution[i])
@@ -29,9 +33,11 @@ def run_tests(number_of_tests, n, digit_distribution, redundancy, complexity, ve
     source = list(arr)
     number_of_successes = 0
     for i in range(number_of_tests):
+        w = source[i:i + (n - redundancy)]
+        if print_output and not verbose:
+            print('input  =', "".join([str(x) for x in w]))
         f = io.StringIO()
         with contextlib.redirect_stdout(f):
-            w = source[i:i + (n - redundancy)]
             res = run_action(w, q, 'encode', redundancy, complexity, verbose, test_mode)
         out = f.getvalue()
         if print_output and i & 0b1111111 == 0:  # Print every 128-th output
