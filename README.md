@@ -34,7 +34,14 @@ action and sequence are must parameters where action is either "encode" or "deco
 
 There are some optional flags which can affect how the tool works
 * **-h** - show help message.
-* **-i** - when flag is on input will be supplied via the standard input .
+* **-i** - when flag is on input will be supplied via the standard input.
+* **-r** - choose the number of redundancy bits (can be 1 or 2). default is 1 redundancy bit.
+* **-c** - toggle between 2 implementations options. "time" is for better time complexity (but consumes more space) and "space" is for a better space complexity (but less efficient in time).
+* **-v** - when flag is on output verbosity increased and a detailed log is printed.
+* **-t** - test mode, make sure that encoded word has no identical windows\ decoded word encoding is equeal to the input word.
+* **-q** - determine the size of the alphabet. default is 2 (binary). notice that when q > 2 sequence charecters should be delimited by ','.
+
+
 
 ```
 Give an example
