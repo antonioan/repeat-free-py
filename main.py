@@ -88,10 +88,6 @@ if __name__ == '__main__':
             print("You must enter a word either from the command line or via standard input", file=sys.stderr)
             exit(1)
 
-    if args.q > 9:
-        if "," not in args.sequence:
-            print("for q > 9 please use ',' as a delimiter between different characters", file=sys.stderr)
-            exit(1)
     args.sequence = [int(x) for x in list(args.sequence)] if "," not in args.sequence else args.sequence.replace(" ",
                                                                                                                  "").split(
         ",")
