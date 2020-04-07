@@ -70,8 +70,8 @@ def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, te
 if __name__ == '__main__':
     parser = argparse.ArgumentParser("./main")
     parser.add_argument("action", help="{encode, decode}")
+    parser.add_argument("sequence", nargs="?", help="a q-ary word")
     parser.add_argument("-i", "--input", help="get word from standard input", action="store_true")
-    parser.add_argument("sequence", nargs="?", help="a binary word")
     parser.add_argument("-r", "--redundancy", type=int, choices=[1, 2],
                         help="how many redundancy bits to use", default=1)
     parser.add_argument("-q", type=int, help="alphabet's size", default=2)
@@ -86,6 +86,12 @@ if __name__ == '__main__':
             args.sequence = input()
         else:
             print("You must enter a word either from the command line or via standard input", file=sys.stderr)
+            exit(1)
+
+    if args.q != 2:
+        if "," not in args.sequence:
+            print(args.q)
+            print("You must use ',' as a delimiter when using q != 2 flag", file=sys.stderr)
             exit(1)
 
     args.sequence = [int(x) for x in list(args.sequence)] if "," not in args.sequence else args.sequence.replace(" ",
