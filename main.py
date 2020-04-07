@@ -40,6 +40,8 @@ def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, te
         w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode, q).input(
         w).decode().output()
 
+    if verbose_mode:
+        print("output = ", end="")
     if is_comma:
         print(str(res_word)[1:-1].replace(" ", ""))
     else:
