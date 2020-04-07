@@ -45,6 +45,7 @@ class Encoder:
     def __init__(self, alg_type: int, verbose_mode: bool, alg_params, q: int = 2):
         assert 1 <= int(alg_params['redundancy']) <= 2
         assert 1 <= int(alg_params['rll_extra']) <= 2
+        assert 2 <= q
         assert alg_type in ["time", "space"]
         self.q = q
         self.type = 1 if alg_type == "space" else 2  # 1 saves space but costs more time

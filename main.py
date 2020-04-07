@@ -74,6 +74,7 @@ if __name__ == '__main__':
     parser.add_argument("sequence", nargs="?", help="a binary word")
     parser.add_argument("-r", "--redundancy", type=int, choices=[1, 2],
                         help="how many redundancy bits to use", default=1)
+    parser.add_argument("-q", type=int, help="alphabet's size", default=2)
     parser.add_argument("-c", "--complexity", choices=["time", "space"],
                         help="save time or space complexity", default="time")
     parser.add_argument("-v", "--verbose", help="increase output verbosity", action="store_true")
@@ -85,10 +86,16 @@ if __name__ == '__main__':
             args.sequence = input()
         else:
             print("You must enter a word either from the command line or via standard input", file=sys.stderr)
-            exit()
+            exit(1)
 
-    q = 2  # Temporarily constant
-    run_action([int(x) for x in list(args.sequence)], q, args.action, args.redundancy, args.complexity, args.verbose,
+    if args.q > 9:
+        if "," not in args.sequence:
+            print("for q > 9 please use ',' as a delimiter between different characters", file=sys.stderr)
+            exit(1)
+    args.sequence = [int(x) for x in list(args.sequence)] if "," not in args.sequence else args.sequence.replace(" ",
+                                                                                                                 "").split(
+        ",")
+    run_action(args.sequence, args.q, args.action, args.redundancy, args.complexity, args.verbose,
                args.test)
 
 # region Anecdotes
