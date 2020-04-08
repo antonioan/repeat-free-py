@@ -28,27 +28,25 @@ class Encoder:
     zero_rll: int
     type: int
     redundancy: int
-
     # endregion
 
-    def __init__(self, alg_type: str, alg_params, verbose_mode: bool, q: int = 2):
-        assert 1 <= int(alg_params['redundancy']) <= 2
+    def __init__(self, alg_type: str, redundancy, verbose_mode: bool, q: int = 2):
+        assert 1 <= redundancy <= 2
         assert 2 <= q
         assert alg_type in ["time", "space"]
-        self.q = q
         self.type = 1 if alg_type == "space" else 2  # 1 saves space but costs more time
+        self.redundancy = redundancy
+        self.zero_rll = 3 - redundancy
         self.verbose = verbose_mode
-        alg_params['rll_extra'] = 3 - alg_params['redundancy']
-        self.alg_params = alg_params
+        self.q = q
 
     def input(self, w: List):
         # Tested: `self.w = w` happens by reference (since `list` is mutable)
         self.w = w
-        self.redundancy = int(self.alg_params['redundancy'])
         self.n = len(w) + self.redundancy
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
-        self.zero_rll = self.log_n + int(self.alg_params['rll_extra'])
+        self.zero_rll += self.log_n
         return self
 
     def encode(self, _debug_no_append=False):

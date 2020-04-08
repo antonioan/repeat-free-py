@@ -38,24 +38,21 @@ class Decoder:
     end_index: int
     zero_rll: int
     redundancy: int
-
     # endregion
 
-    def __init__(self, alg_params, verbose_mode, q: int = 2):
-        self.q = q
-        alg_params['rll_extra'] = 3 - alg_params['redundancy']
-        self.alg_params = alg_params
+    def __init__(self, redundancy, verbose_mode, q: int = 2):
+        self.redundancy = redundancy
+        self.zero_rll = 3 - redundancy
         self.verbose = verbose_mode
+        self.q = q
 
     def input(self, w: List):
-        # TODO add a check before?
-        assert (1 in w)
+        assert 1 in w
         self.w = w
-        self.redundancy = int(self.alg_params['redundancy'])
         self.n = len(w)
         self.log_n = ceil(log(self.n, self.q))
         self.k = 2 * self.log_n + 2
-        self.zero_rll = self.log_n + int(self.alg_params['rll_extra'])
+        self.zero_rll += self.log_n
         self.start_index = 0
         self.end_index = self.n
         return self
@@ -103,7 +100,7 @@ class Decoder:
                     print('w-2    =', self.w[self.start_index:self.end_index + self.zero_rll + 1])
         if self.verbose:
             print('dec*   =', self.w[self.start_index:self.end_index])
-        if int(self.alg_params['redundancy']) == 2:
+        if self.redundancy == 2:
             while self.w[self.start_index] == 1:
                 # Are we done yet?
                 self.start_index += 1
@@ -137,4 +134,4 @@ class Decoder:
         self.end_index += self.zero_rll
 
     def output(self):
-        return self.w[self.start_index + int(self.alg_params['redundancy']) - 1:self.end_index]
+        return self.w[self.start_index + self.redundancy - 1:self.end_index]

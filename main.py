@@ -17,10 +17,7 @@ def validate_no_identical_windows(w, k):
 
 
 def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, test_mode, comma_mode):
-    alg_params = {'redundancy': redundancy}
-    n = len(w) + int(alg_params['redundancy']) if action == "encode" else len(w)
-    if test_mode:
-        assert (len(w) == n - int(alg_params['redundancy']) if action == "encode" else n)
+    n = len(w) + redundancy if action == "encode" else len(w)
     orig_w = w.copy()
     log_n = ceil(log(n, q))
     k = 2 * log_n + 2
@@ -31,9 +28,8 @@ def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, te
         print('k      =', k)
         print('w      =', w)
 
-    res_word = Encoder(complexity_mode, alg_params, verbose_mode, q).input(
-        w).encode().output() if action == "encode" else Decoder(alg_params, verbose_mode, q).input(
-        w).decode().output()
+    res_word = Encoder(complexity_mode, redundancy, verbose_mode, q).input(w).encode().output() if \
+        action == "encode" else Decoder(redundancy, verbose_mode, q).input(w).decode().output()
 
     if verbose_mode:
         print("output = ", end="")
@@ -45,7 +41,7 @@ def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, te
     if test_mode:
         if action == "encode":
             if validate_no_identical_windows(res_word, k):
-                if orig_w == Decoder(alg_params, verbose_mode, q).input(res_word).decode().output():
+                if orig_w == Decoder(redundancy, verbose_mode, q).input(res_word).decode().output():
                     print('TEST SUCCESS')
                     return True
                 else:
@@ -54,10 +50,10 @@ def run_action(w: List, q, action, redundancy, complexity_mode, verbose_mode, te
                     return False
             else:
                 print('TEST FAILED!')
-                print('result is not repeat free')
+                print('Result is not repeat-free')
                 return False
         elif action == "decode":
-            if orig_w == Encoder(complexity_mode, verbose_mode, alg_params, q).input(res_word).encode().output():
+            if orig_w == Encoder(complexity_mode, redundancy, verbose_mode, q).input(res_word).encode().output():
                 print('TEST SUCCESS')
                 return True
             else:
@@ -100,8 +96,7 @@ if __name__ == '__main__':
         args.sequence = args.sequence.replace(" ", "").split(",")
     args.sequence = [int(x) for x in list(args.sequence)]
 
-    run_action(args.sequence, args.q, args.action, args.redundancy, args.complexity, args.verbose,
-               args.test, is_comma)
+    run_action(args.sequence, args.q, args.action, args.redundancy, args.complexity, args.verbose, args.test, is_comma)
 
 # region Anecdotes
 
