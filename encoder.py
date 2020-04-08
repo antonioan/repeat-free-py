@@ -4,29 +4,18 @@ from utils import *
 """
 
 n * log_n       iterations
-n   OR?  log_n  new windows need to be compared per iteration
+n   OR   log_n  new windows need to be compared per iteration
 n               comparisons for each window
 log_n           operations for each comparison
 
-TOTAL: n^3 * (log_n)^2  [ OR?  n^2 * (log_n)^3 ] <-- The latter case does not seem to be right...
+TOTAL:
 
 TIME                       SPACE
 -----                      -----
-  n^3 * (log_n)^2    |       log_n          # implemented as Encoder.eliminate1()
-  n^2 * log_n        |       n * log_n      # implemented as Encoder.eliminate2()
-  n   * (log_n)^2    |       n^2            # see crazy_algorithm1.py (the queue has issues, though...)
-
-
-# Where do we go now?
-  1. Better time complexity (but worse space)     <- Most important
->       TODO: Finish third implementation
-x 2. q-ary support                                <- Between easy and important
-> 3. Decoder                                      <- Easiest
+  n^3 * (log_n)^2    |       log_n          # when saving space
+  n^2 * log_n        |       n * log_n      # when saving time
 
 """
-
-
-# alg_params = {'redundancy': 1, 'rll_extra': 2}
 
 
 class Encoder:
