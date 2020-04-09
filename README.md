@@ -2,11 +2,13 @@
 
 # Project Goals
 
-The main goal of this tool is to eliminate identical windows in a given sequence. The input is a length-n q-ary vector
-and the output is a length-(n+1) q-ary vector which has no identical windows, when windows size is <img src="https://render.githubusercontent.com/render/math?math={2\log_qn%2B1}">.
+The goal of this tool is to eliminate identical windows in a given sequence. The input is a length-*(n - 1)* *q*-ary vector
+and the output is a length-*n* *q*-ary vector which has no identical windows of size *2 &bull; log_q(n) + 2*.
+<!--<img src="https://render.githubusercontent.com/render/math?math={2\log_qn%2B1}">-->
 
+Repeat-free vectors are also called *weak de-Bruijn sequences*.
 
-The algorithm is based on Algorithm 1 from the article "[Repeat-Free Codes](/article.pdf)" by E. Yaakobi, O. Elishco, R. Gabrys and M. Medard.
+The encoding algorithm is based on **Algorithm 1** from the article "[Repeat-Free Codes](/article.pdf)" by E. Yaakobi, O. Elishco, R. Gabrys and M. Medard.
 
 ## Getting Started
 
@@ -14,9 +16,8 @@ The project was developed in Python.
 
 ### Prerequisites
 
-```
-Python 3.6 or higher
-```
+* Python 3.6 or higher
+
 ## Usage
 
 The tool can be operated using the command line as follows:
@@ -26,7 +27,7 @@ usage: ./main [-h] [-i] [-r {1,2}] [-q Q] [-c {time,space}] [-v] [-t] action [se
 
 ### Positional Parameters
 
-action and sequence are must parameters where action is either "encode" or "decode" and sequence is a q-ary word.
+*action* and *sequence* are required parameters, where *action* is either "encode" or "decode" and *sequence* is a *q*-ary word.
 
 ```
 ./main encode 101010
@@ -100,7 +101,7 @@ TEST SUCCESS
 Random test generation is supplied at [test.py](test.py) and requires the Python `numpy` package.
 
 ## Encoder
-*File: encoder.py*
+*File: [encoder.py](encoder.py)*
 
 ### Parameters
 The encoder accepts four parameters.
@@ -156,7 +157,7 @@ Time complexity can be summarized in the following:
 
 
 ## Decoder
-*File: decoder.py*
+*File: [decoder.py](decoder.py)*
 
 ### Parameters
 The decoder accepts three parameters.
@@ -184,24 +185,24 @@ The decoder accepts three parameters.
     * (3.2) Otherwise, **undo case 2** on *w*.
 * (4) Return *w[:(n - 1)]*.
 
-#### Data Structures and Complexity
+### Data Structures and Complexity
 * (1) One way would be to convert the input into a dictionary, so that random-access is *O(log_q(n))*.
-    * **Time complexity:** O(ITERATIONS * UPDATE TIME/ITERATION) = O((n * log_q(n)) * (log_q(n) * log_q(n))) = O(n * log^3_q(n))
+    * **Time complexity:** O(iterations * update time per iter) = O((n * log_q(n)) * (log_q(n) * log_q(n))) = O(n * log^3_q(n))
     * **Space complexity:** O(n)
 * (2) Another way, maintaining *O(log_q(n)) space complexity, is to insert with *O(n)* time complexity.
-    * **Time complexity:** O(ITERATIONS * UPDATE TIME/ITERATION) = O((n * log_q(n)) * (n * log_q(n))) = O(n^2 * log^2_q(n))
+    * **Time complexity:** O(iterations * update time per iter) = O((n * log_q(n)) * (n * log_q(n))) = O(n^2 * log^2_q(n))
     * **Space complexity:** O(log_n)
 
 Our decoder implements option 2.
 
 ## Better time complexity?
-The lower-bound for time complexity is *O(n &bull; log^2_q(n))*: We must go over *O(n &bulls; log_q(n))* distinct windows and compare each one at least once in *O(loq_q(n))*.
+The lower-bound for time complexity is *O(n &bull; log^2_q(n))*: we must go over *O(n &bull; log_q(n))* distinct windows and compare each one at least once in *O(loq_q(n))*.
 
 Is it achievable? We think so. However, considering the amount of data structures we tried to put together and the substantial time we put into stubbornly trying to achieve it, we are led to believe that such a complicated structure would have little practical advantages. Our endeavors still exist in the [rip](rip/) directory, waiting for those bold enough to wander there.
 
 ## Profiler
 
-See README.md under profiler.
+See [README.md](profiler/README.md) under profiler.
 
 ## Authors
 
@@ -209,15 +210,56 @@ See README.md under profiler.
 * [**Rotem Samuel**](https://github.com/rotemsamuel)
 
 ## Mentor
+We were very fortunate to have Prof. Yaakobi as our mentor, and are grateful for the thoughts and guidance he's given us during the project.
 
 * [Professor **Eitan Yaakobi**](http://www.cs.technion.ac.il/people/yaakobi/)
 
-## Contributing
-Pull requests are welcome. For major changes, please open an *issue* for discussion first.
-
-Make sure to update tests as appropriate.
-
 ## License
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+## Appendix
+### Deleted Windows
+Say *i* is the index of the **deleted** window in some iteration, and *A = [a, a + k - 1]* is a *k*-long window in *w* **before** the deletion. Then *A* is deleted if one of these cases holds:
+
+1. *a <= i <= a + k - 1*, which is equivalent to *i - k + 1 <= a <= i*
+2. *a <= i + k - 1 <= a + k - 1*, which is equivalent to *i <= a <= i + k - 1*
+
+**i.e.** *max(0, i - k + 1) <= a <= min(i + k - 1, n - k)*
+
+**Number of deleted windows:** *1 + min(i + k - 1, n - k) - max(0, i - k + 1) <= 2k - 1*
+
+### Added Windows
+Say *i* is the index of the **deleted** window in some iteration, and *A = [a, a + k - 1]* is a *k*-long window in *w* **after** both the deletion and insertion. Then *A* is a new window if one of these cases holds:
+
+1. *0 <= a <= k - 2*
+2. *i <= a <= i + k - 2*
+
+**Number of added windows:** *2k - 2 - max(0, k - 2 - i + 1) <= 2k - 2*
+
+### Shifted Windows
+Say *i* is the index of the **deleted** window in some iteration, and *A = [a, a + k - 1]* is a *k*-long window in *w* **before** the deletion. Then *A* is a shifted window if one of these cases holds:
+
+1. *0 <= a <= i - k* (shifted by *k - 1*)
+2. *i + k <= a <= n - k* (shifted by *-1*)
+
+**Number of shifted windows:** *max(0, i - k + 1) + max(0, n - i - 2k + 1) = O(n)*
+
+### On 1-Bit Redundancy
+Our encoder is a one-to-one function *E: [q]^(n - 1) -> [q]^n*. All encoder output vectors (the encoder image) are *(2 &bull; log_q(n) + 2)*-repeat-free. Are there enough of these vectors in *[q]^n* for them to satisfy unique source vectors?
+
+**Proposition.** Denote by A(n, k) the number of vectors of length *n* which are *k*-repeat-free, then for all *k >= 2 &bull; log_q(n)*, it holds that *A(n, k) >= q^(n - 1)*.
+
+*Proof.* We count the number of "bad" vectors. To do so, we count the number of vectors whose *i*-th window is identical to its *j*-th window, for *j > i*. For such *i, j*, the *k* values in the *j*-th window are determined by the *k − max(0, j − i)* values in the *i*-th window. That is, even if the two windows overlap, the number of values that are automatically determined is *k*. (Truly, if they do not overlap, this is clear. Otherwise, they overlap in *j − i* bits. The first *k − (j − i)* bits of the *i*-th window will determine the next *k − (j − i)* bits of the union block of the two windows, which in turn determine the next bits until all the union block is determined.) Thus, the number of “free” choosable bits is *n − k*, in all cases. Then for any *i, j*, the number of non-*k*-repeat-free vectors with such two identical windows is *q^(n - k)*. Clearly, a vector might satisfy this property for two different values for *i, j*, so we are over-counting. Then we have
+
+[Number of bad vectors]
+* <= sum of [Number of bad vectors with identical windows at i, j] for *1 <= i < j <= n - k + 1*
+* &nbsp;= sum of *(q^(n - k))* for *1 <= i < j <= n - k + 1*
+* <= sum of *(q^(n - 2 &bull; log_q(n)))* for *1 <= i < j <= n*
+* &nbsp;= *(n choose 2) &bull; q^(n - 2 &bull; log_q(n))*
+* &nbsp;= *(n(n - 1) / 2) &bull; q^n / n^2*
+* &nbsp;= *((n - 1) / n) &bull; q^(n - 1)*
+* <= *q^(n - 1)*
+
+Even with over-counting, we successfully upper-bounded the number of bad vectors by *q^(n - 1)*.
+Therefore, the number of “good” *k*-repeat-free vectors is at least *q^n − q^(n − 1) = q^(n − 1)*, as required to prove. 
 
