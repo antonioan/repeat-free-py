@@ -10,6 +10,30 @@ Repeat-free vectors are also called *weak de-Bruijn sequences*.
 
 The encoding algorithm is based on **Algorithm 1** from the article "[Repeat-Free Codes](/article.pdf)" by E. Yaakobi, O. Elishco, R. Gabrys and M. Medard.
 
+## Table of Contents
+
+* [Getting Started](#getting-started)
+    * [Prerequisites](#prerequisites)
+* [Usage](#usage)
+    * [Positional Parameters](#positional-parameters)
+    * [Optional Flags](#optional-flags)
+    * [Examples](#examples)
+    * [Running Tests](#running-tests)
+* [Encoder](#encoder)
+    * [Parameters](#parameters)
+    * [Algorithm](#algorithm)
+    * [Complexity](#complexity)
+* [Decoder](#decoder)
+    * [Parameters](#parameters-1)
+    * [Algorithm](#algorithm-1)
+    * [Complexity](#complexity-1)
+* [Better time complexity?](#better-time-complexity)
+* [Profiler](#profiler)
+* [Authors](#authors)
+* [Mentor](#mentor)
+* [License](#license)
+* [Appendix](#appendix)
+
 ## Getting Started
 
 The project was developed in Python.
@@ -185,7 +209,7 @@ The decoder accepts three parameters.
     * (3.2) Otherwise, **undo case 2** on *w*.
 * (4) Return *w[:(n - 1)]*.
 
-### Data Structures and Complexity
+### Complexity
 * (1) One way would be to convert the input into a dictionary, so that random-access is *O(log_q(n))*.
     * **Time complexity:** O(iterations * update time per iter) = O((n * log_q(n)) * (log_q(n) * log_q(n))) = O(n * log^3_q(n))
     * **Space complexity:** O(n)
@@ -261,5 +285,5 @@ Our encoder is a one-to-one function *E: [q]^(n - 1) -> [q]^n*. All encoder outp
 * <= *q^(n - 1)*
 
 Even with over-counting, we successfully upper-bounded the number of bad vectors by *q^(n - 1)*.
-Therefore, the number of “good” *k*-repeat-free vectors is at least *q^n − q^(n − 1) = q^(n − 1)*, as required to prove. 
+Therefore, the number of “good” *k*-repeat-free vectors is at least *q^n − q^(n − 1) >= q^(n − 1)*, as required to prove. 
 
