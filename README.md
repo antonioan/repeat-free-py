@@ -10,6 +10,8 @@ Repeat-free vectors are also called *weak de-Bruijn sequences*.
 
 The encoding algorithm is based on **Algorithm 1** from the article "[Repeat-Free Codes](/article.pdf)" by E. Yaakobi, O. Elishco, R. Gabrys and M. Medard.
 
+This project was done as a final project as part of the course **Coding and Algorithms and Memories** as taught by Prof. E. Yaakobi at the Technion, Winter 2019-2020.
+
 ## Table of Contents
 
 * [Getting Started](#getting-started)
