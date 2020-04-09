@@ -17,7 +17,7 @@ The project was developed in Python.
 ```
 Python 3.6 or higher
 ```
-## Running the tests
+## Usage
 
 The tool can be operated using the command line as follows:
 ```
@@ -43,6 +43,8 @@ There are some optional flags which can affect how the tool works
 * **-v** - when flag is on output verbosity increased and a detailed log is printed.
 * **-t** - test mode, make sure that encoded word has no identical windows\ decoded word encoding is equeal to the input word.
 * **-q** - determine the size of the alphabet. default is 2 (binary). notice that when q > 2 sequence charecters should be delimited by ','.
+
+### Examples
 
 ```
 ./main.py encode 000000000000000001111111111000000000
@@ -94,6 +96,9 @@ TEST SUCCESS
 0,0,1,2,3,1
 ```
 
+### Running Tests
+Random test generation is supplied at [test.py](test.py) and requires the Python `numpy` package.
+
 ## Encoder
 *File: encoder.py*
 
@@ -109,56 +114,94 @@ The encoder accepts four parameters.
 4. **q** (int): Alphabet size. Alphabet is assumed to be *{0, 1, ..., q - 1}*. Default is 2.
 
 ### Algorithm
-The algorithm includes two degrees of freedom, which are determined by the *redundancy* and the *alg_type*.
+The algorithm includes two degrees of freedom determined by the *redundancy* and the *alg_type*.
 
-Algorithm structure and complexity analysis will soon be added to this document.
+The following description of the algorithm assumes **redundancy = 1**. The other case is described afterward. 
 
-<!--
-n * log_n       iterations\
-n   OR?  log_n  new windows need to be compared per iteration\
-n               comparisons for each window\
-log_n           operations for each comparison
--->
+**Input:** *w* of length *n - redundancy*.
+
+**Output:** *E(w)* of length *n*, *k*-repeat-free and *(0, zero_rll)*-run-length-limited, where *zero_rll = log_q(n) + 2*. Note that the latter property is not part of the requirements for the encoder, but is needed to allow decoding.
+
+1. Append *1 &bull; 0^zero_rll* to the end of *w*. Call this appended series of characters the **marker**.
+
+2. **Elimination:** Iteratively handle identical windows and long runs of zeros, until the condition of the output is achieved. The behavior of the algorithm is described in the [article](article.pdf), and so we will not go into further details.
+
+3. **Expansion:** As long as the word length is less than *n*, append to *w* new chunks, each of length log_q(n), such that the output condition remains satisfied.
+
+The first *n* characters of the resulting word are then returned as the codeword *c = E(w)*.
+
+**Notes:**
+
+* While working on the algorithm, another approach emerged which uses two redundancy bits. The only change is this: Prepend a zero to the beginning of *w* and set *zero_rll = log_q(n) + 1*, then run the algorithm identically on the resulting word. Upon decoding, the redundant zero at the beginning is dropped once the main decoder algorithm is done, and *w* is retrieved.
+
+* See the [article](article.pdf) for the algorithm correctness proof and analysis.
+
+### Complexity
+
+Upon each identical window detection, a *k*-long window is deleted from the word and *(k - 1)* new characters are prepended. Therefore, there are *O(k) = O(log_q(n))* newly added windows. Since after each iteration the word length decreases by *1*, there are *O(n)* possible iterations with *O(log_q(n))* possible new windows each time. All in all, there are *O(n &bull; log_q(n))* possibly distinct handled windows throughout the algorithm.
+
+Upon the addition of the new windows, we have to either compare only them to all other windows by hashing the already visited windows in the current iteration (taking *O(log_q(n))* time and *O(n &bull; log_q(n))* space) when *(alg_type == "space")*, or compare again all pairs of windows (taking *O(n)* time and *O(log_q(n))* space) when *(alg_type == "space")*.
+**Empirically, the former implementation way outperforms the latter, both in time and space consumption.**
+
+Since each window is possibly compared with all others, there are O(n) comparisons, each taking O(log_q(n)) time and space complexity.
+
+Time complexity can be summarized in the following: 
+
+* *(n &bull; log_q(n))* **iterations**
+* *n* OR *log_q(n)* **new windows** need to be compared per iteration
+* *n* **comparisons** for each window
+* *log_q(n)* **operations** for each comparison
+
+**Total:** *n^3 &bull; log^2_q(n)* (saving space) OR *n^2 &bull; log^3_q(n)* (saving time).
+
 
 ## Decoder
 *File: decoder.py*
 
 ### Parameters
+The decoder accepts three parameters.
 
-TBA
+1. **redundancy** (either *1* or *2*): Whether the encoder used one or two redundancy bits.
+
+2. **verbose_mode** (bool): If set, the resulting word of every step is printed to the standard output.
+
+3. **q** (int): Alphabet size. Alphabet is assumed to be *{0, 1, ..., q - 1}*. Default is 2.
+
 
 ### Algorithm
 
-Sketch for the algorithm. Will be tweaked soon.
+**Input:** *w* of length *n*, output of the supplied encoder.
 
-Input: *w* of length *n*.\
-Output: *D(w)* of length *(n - 1)*.
+**Output:** *D(w)* of length *(n - 1)*.
 
-(1) Search for a *(log_n + 1)*-long run of zeros.\
-&nbsp;&nbsp;&nbsp;&nbsp;(1.1) If found: w = w' * 1 * 0^(log_n + 1) * w''.\
-&nbsp;&nbsp;&nbsp;&nbsp;(1.2) Otherwise: w = w' * 1 * 0^t, where (0 <= t <= log_n).\
-&nbsp;&nbsp;&nbsp;&nbsp;(Proof for both: Recall that (1 * 0^(log_n + 1)) was appended. These zeros are never victims of phase 2.)\
-(2) Update: w <- w' * 1 * 0^(log_n + 1)\
-(3) Do until len(w) == (n + log_n + 1):\
-&nbsp;&nbsp;&nbsp;&nbsp;(3.1) If w[0] == 0, undo phase 1 on w.\
-&nbsp;&nbsp;&nbsp;&nbsp;(3.2) Otherwise, undo phase 2 on w.\
-(4) Return w[:(n - 1)]
+* (1) Search for a *zero_rll*-long run of zeros - the aforementioned **marker**.
+    * (1.1) If found: *w = w' &bull; 1 &bull; 0^(log_n + 1) &bull; w''*.
+    * (1.2) Otherwise: *w = w' &bull; 1 &bull; 0^t, where (0 <= t <= log_n)*.
+    * (**Note**: Recall that *(1 &bull; 0^zero_rll* was appended. These zeros are never victims of phase 2.)
+* (2) Update: *w <- w' * 1 * 0^(log_n + 1)*
+* (3) Do until *len(w) == (n + log_n + 1)*:
+    * (3.1) If *w[0] == 0*, **undo case 1** on *w*.
+    * (3.2) Otherwise, **undo case 2** on *w*.
+* (4) Return *w[:(n - 1)]*.
 
 #### Data Structures and Complexity
-(1) One way is to convert the input into a dictionary, so that random-access is O(log_n).\
-&nbsp;&nbsp;&nbsp;&nbsp;**Time complexity:** O(ITERATIONS * UPDATE TIME PER ITERATION) = O((n * log_n) * (log_n * log_n)) = O(n * log^3_n)\
-&nbsp;&nbsp;&nbsp;&nbsp;**Space complexity:** O(n)\
-(2) Another way, maintaining O(log_n) space complexity, is to insert with O(n) time complexity.\
-&nbsp;&nbsp;&nbsp;&nbsp;**Time complexity:** O(ITERATIONS * UPDATE TIME PER ITERATION) = O((n * log_n) * (n * log_n)) = O(n^2 * log^2_n)\
-&nbsp;&nbsp;&nbsp;&nbsp;**Space complexity:** O(log_n)
+* (1) One way would be to convert the input into a dictionary, so that random-access is *O(log_q(n))*.
+    * **Time complexity:** O(ITERATIONS * UPDATE TIME/ITERATION) = O((n * log_q(n)) * (log_q(n) * log_q(n))) = O(n * log^3_q(n))
+    * **Space complexity:** O(n)
+* (2) Another way, maintaining *O(log_q(n)) space complexity, is to insert with *O(n)* time complexity.
+    * **Time complexity:** O(ITERATIONS * UPDATE TIME/ITERATION) = O((n * log_q(n)) * (n * log_q(n))) = O(n^2 * log^2_q(n))
+    * **Space complexity:** O(log_n)
 
 Our decoder implements option 2.
+
+## Better time complexity?
+The lower-bound for time complexity is *O(n &bull; log^2_q(n))*: We must go over *O(n &bulls; log_q(n))* distinct windows and compare each one at least once in *O(loq_q(n))*.
+
+Is it achievable? We think so. However, considering the amount of data structures we tried to put together and the substantial time we put into stubbornly trying to achieve it, we are led to believe that such a complicated structure would have little practical advantages. Our endeavors still exist in the [rip](rip/) directory, waiting for those bold enough to wander there.
 
 ## Profiler
 
 See README.md under profiler.
-
-<!--Maybe add an "Anecdotes"-like section, then move the commented-out anecdote from `main.py` to here.-->
 
 ## Authors
 
@@ -169,8 +212,12 @@ See README.md under profiler.
 
 * [Professor **Eitan Yaakobi**](http://www.cs.technion.ac.il/people/yaakobi/)
 
+## Contributing
+Pull requests are welcome. For major changes, please open an *issue* for discussion first.
+
+Make sure to update tests as appropriate.
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
 
